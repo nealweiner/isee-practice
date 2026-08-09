@@ -240,36 +240,136 @@ const PASSAGES = [
 }
 ];
 
-const MATH = {
-  id:"trig", title:"Trigonometry in Expression Form", target:900,
-  intro:"Missed on two separate tests, months apart. Two decisions, no arithmetic. <b>Which function?</b> Name the two sides involved \u2014 opposite &amp; hypotenuse means sine, adjacent &amp; hypotenuse means cosine, both legs means tangent. <b>Multiply or divide?</b> If the side you <i>want</i> is the hypotenuse, divide. Otherwise multiply.",
+/* --- right-triangle diagram builder ---------------------------------- */
+/* Always drawn with the right angle at the bottom-left. bl / tl / br are the
+   vertex labels (blank for word problems). vertical / horizontal / hyp are the
+   side labels; use "?" for the unknown side and it renders highlighted.      */
+function triSVG(o){
+  const BL=[70,170], TL=[70,55], BR=[290,170];
+  const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
+  const unit=(p,q)=>{const dx=q[0]-p[0],dy=q[1]-p[1],L=Math.hypot(dx,dy);return [dx/L,dy/L];};
+  const acc='#7A4A1F', ink='#1A2B4A';
+  const isQ=t=>String(t).indexOf('?')>=0;
+  const sideCol=t=>isQ(t)?acc:ink;
+  const sideW=t=>isQ(t)?3:2;
+
+  // angle wedge at whichever vertex is marked
+  const V = o.angleAt==='tl' ? TL : BR;
+  const O1 = o.angleAt==='tl' ? BL : BL;
+  const O2 = o.angleAt==='tl' ? BR : TL;
+  const u1=unit(V,O1), u2=unit(V,O2);
+  const R=30;
+  const p1=[V[0]+u1[0]*R, V[1]+u1[1]*R];
+  const p2=[V[0]+u2[0]*R, V[1]+u2[1]*R];
+  let bx=u1[0]+u2[0], by=u1[1]+u2[1];
+  const bl_=Math.hypot(bx,by)||1; bx/=bl_; by/=bl_;
+  const ctrl=[V[0]+bx*R*1.14, V[1]+by*R*1.14];
+  const atxt=[V[0]+bx*58, V[1]+by*58];
+
+  const mV=mid(BL,TL), mH=mid(BL,BR), mHy=mid(TL,BR);
+
+  return `<svg viewBox="0 0 360 215" width="100%" style="max-width:360px;display:block;margin:10px 0"
+    xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif" font-size="15">
+    <line x1="${BL[0]}" y1="${BL[1]}" x2="${TL[0]}" y2="${TL[1]}" stroke="${sideCol(o.vertical)}" stroke-width="${sideW(o.vertical)}"/>
+    <line x1="${BL[0]}" y1="${BL[1]}" x2="${BR[0]}" y2="${BR[1]}" stroke="${sideCol(o.horizontal)}" stroke-width="${sideW(o.horizontal)}"/>
+    <line x1="${TL[0]}" y1="${TL[1]}" x2="${BR[0]}" y2="${BR[1]}" stroke="${sideCol(o.hyp)}" stroke-width="${sideW(o.hyp)}"/>
+    <path d="M ${BL[0]} ${BL[1]-17} L ${BL[0]+17} ${BL[1]-17} L ${BL[0]+17} ${BL[1]}" fill="none" stroke="${ink}" stroke-width="1.4"/>
+    <path d="M ${p1[0]} ${p1[1]} Q ${ctrl[0]} ${ctrl[1]} ${p2[0]} ${p2[1]}" fill="none" stroke="${acc}" stroke-width="1.6"/>
+    <text x="${atxt[0]}" y="${atxt[1]}" fill="${acc}" text-anchor="middle" dominant-baseline="middle">${o.angleText||''}</text>
+    ${o.vertical?`<text x="${mV[0]-10}" y="${mV[1]}" text-anchor="end" dominant-baseline="middle" fill="${sideCol(o.vertical)}">${o.vertical}</text>`:''}
+    ${o.horizontal?`<text x="${mH[0]}" y="${mH[1]+22}" text-anchor="middle" fill="${sideCol(o.horizontal)}">${o.horizontal}</text>`:''}
+    ${o.hyp?`<text x="${mHy[0]+16}" y="${mHy[1]-10}" text-anchor="start" fill="${sideCol(o.hyp)}">${o.hyp}</text>`:''}
+    ${o.bl?`<text x="${BL[0]-12}" y="${BL[1]+18}" text-anchor="middle" font-weight="bold">${o.bl}</text>`:''}
+    ${o.tl?`<text x="${TL[0]-12}" y="${TL[1]-6}" text-anchor="middle" font-weight="bold">${o.tl}</text>`:''}
+    ${o.br?`<text x="${BR[0]+14}" y="${BR[1]+18}" text-anchor="middle" font-weight="bold">${o.br}</text>`:''}
+    ${o.caption?`<text x="180" y="208" text-anchor="middle" font-size="13" fill="#6B6355">${o.caption}</text>`:''}
+  </svg>`;
+}
+
+const MATHSETS = [
+{
+  id:"powers", title:"Powers of Powers", tag:"Exponents", target:900,
+  intro:"When a product is raised to a power, <b>every factor inside gets the exponent &mdash; including the number in front</b>. (3x<sup>4</sup>)<sup>2</sup> is 9x<sup>8</sup>, not 3x<sup>8</sup>. That dropped coefficient is the most common slip in this topic.",
   questions:[
-   {q:"In \u25B3ABC the right angle is at C. Side AC = 20 and angle ABC = 65\u00B0. Which expression equals AB?",
-    o:["20 sin 65\u00B0","20 cos 65\u00B0","20 \u00F7 sin 65\u00B0","20 \u00F7 cos 65\u00B0"], a:2,
-    e:"AB is the hypotenuse (right angle at C), so we divide. From angle B, side AC is opposite. Opposite + hypotenuse means sine."},
-   {q:"Same triangle. Which expression equals BC?",
-    o:["20 tan 65\u00B0","20 \u00F7 tan 65\u00B0","20 cos 65\u00B0","20 \u00F7 cos 65\u00B0"], a:1,
-    e:"BC is adjacent to B, AC is opposite B. Two legs means tangent, and we want the adjacent leg, so divide."},
-   {q:"In \u25B3PQR the right angle is at R. Side PQ = 15 and angle QPR = 40\u00B0. Which expression equals PR?",
-    o:["15 sin 40\u00B0","15 cos 40\u00B0","15 \u00F7 sin 40\u00B0","15 \u00F7 cos 40\u00B0"], a:1,
-    e:"PQ is the hypotenuse and known; PR is adjacent to angle P. Adjacent + hypotenuse means cosine, and we want a leg, so multiply."},
-   {q:"In \u25B3XYZ the right angle is at Y. Side XY = 9 and angle XZY = 28\u00B0. Which expression equals XZ?",
-    o:["9 sin 28\u00B0","9 tan 28\u00B0","9 \u00F7 sin 28\u00B0","9 \u00F7 tan 28\u00B0"], a:2,
-    e:"XZ is the hypotenuse, so divide. XY is opposite angle Z, so sine."},
-   {q:"A ladder reaches 16 feet up a wall at a 74\u00B0 angle with the ground. Which expression gives the ladder's length?",
-    o:["16 sin 74\u00B0","16 \u00F7 sin 74\u00B0","16 cos 74\u00B0","16 \u00F7 cos 74\u00B0"], a:1,
+   {q:"(5a\u2074)\u00B3 =", o:["5a\u00B9\u00B2","15a\u00B9\u00B2","125a\u2077","125a\u00B9\u00B2"], a:3,
+    e:"The 3 applies to the coefficient too: 5\u00B3 = 125, and (a\u2074)\u00B3 = a\u00B9\u00B2. Choice A drops the coefficient entirely; B uses 5\u00D73 instead of 5\u00B3; C adds the exponents instead of multiplying."},
+   {q:"(3m\u2074n\u00B3)\u00B3 =", o:["3m\u00B9\u00B2n\u2079","9m\u00B9\u00B2n\u2079","27m\u00B9\u00B2n\u2079","27m\u2077n\u2076"], a:2,
+    e:"3\u00B3 = 27, m\u2074\u02E3\u00B3 = m\u00B9\u00B2, n\u00B3\u02E3\u00B3 = n\u2079. Multiply each exponent by the outside power; never add."},
+   {q:"(2a\u2075 / b\u00B3)\u2074 =", o:["2a\u00B2\u2070/b\u00B9\u00B2","8a\u00B2\u2070/b\u00B9\u00B2","16a\u00B2\u2070/b\u00B9\u00B2","16a\u2079/b\u2077"], a:2,
+    e:"The exponent hits the numerator, the denominator, and the 2: 2\u2074 = 16, a\u00B2\u2070, b\u00B9\u00B2."},
+   {q:"(x\u00B3\u207F)\u2075 =", o:["x\u00B9\u2075\u207F","x\u00B3\u207F\u207A\u2075","x\u2078\u207F","x\u00B9\u2075\u207A\u207F"], a:0,
+    e:"Power of a power multiplies: 3n \u00D7 5 = 15n. Choice B adds \u2014 that is the x\u207F\u00B7x\u1D50 rule, a different situation."},
+   {q:"(b\u207F\u207A\u2074)\u00B2 / b\u00B2\u207F =", o:["b\u2078","b\u207F\u207A\u2078","b\u00B2\u207F\u207A\u2078","b\u2074"], a:0,
+    e:"The top becomes b\u00B2\u207F\u207A\u2078. Subtracting 2n leaves b\u2078 \u2014 the n cancels completely and a plain power is left."},
+   {q:"3\u207F\u207A\u00B2 / 3\u207F\u207B\u00B9 =", o:["9","27","3\u00B3\u207F","3\u00B2\u207F\u207A\u00B9"], a:1,
+    e:"Subtract the exponents: (n+2) \u2212 (n\u22121) = 3, so 3\u00B3 = 27. When two exponents differ by a constant, the variable always drops out."},
+   {q:"If 2\u207F = w, which expression represents 2\u207F\u207A\u00B3?", o:["w + 3","w + 8","8w","6w"], a:2,
+    e:"2\u207F\u207A\u00B3 = 2\u207F \u00D7 2\u00B3 = 8w. Adding to the exponent multiplies the value; it never adds to it."},
+   {q:"If 3\u1D4F = p, which expression represents 9\u1D4F?", o:["3p","p\u00B2","9p","p + 3"], a:1,
+    e:"Rewrite one base as a power of the other: 9\u1D4F = (3\u00B2)\u1D4F = (3\u1D4F)\u00B2 = p\u00B2."}
+  ]
+},
+{
+  id:"poly", title:"Polynomials: Combining and Factoring", tag:"Algebraic Concepts", target:900,
+  intro:"Two terms combine <b>only if their variable parts are identical</b> &mdash; same letters, same exponents. When factoring, pull out the <b>smallest</b> power of each variable that appears in <i>every</i> term; a variable missing from even one term cannot come out at all.",
+  questions:[
+   {q:"9y\u00B2 \u2212 4y \u2212 3y\u00B2 + 7y =", o:["6y\u00B2 + 3y","6y\u00B2 + 11y","6y\u00B3","12y\u00B2 + 3y"], a:0,
+    e:"Group by matching variable parts: (9\u22123)y\u00B2 = 6y\u00B2 and (\u22124+7)y = 3y. The y\u00B2 and y terms never merge into one."},
+   {q:"6m\u00B2n \u2212 3mn\u00B2 + 2m\u00B2n =", o:["5m\u00B3n\u00B3","8m\u00B2n \u2212 3mn\u00B2","8m\u00B2n","5m\u00B2n \u2212 3mn\u00B2"], a:1,
+    e:"6m\u00B2n and 2m\u00B2n match exactly and combine to 8m\u00B2n. The term 3mn\u00B2 has different exponents, so it stays as it is."},
+   {q:"(5a\u00B2 \u2212 3a + 2) \u2212 (2a\u00B2 + 4a \u2212 6) =", o:["3a\u00B2 + a \u2212 4","3a\u00B2 \u2212 7a \u2212 4","3a\u00B2 \u2212 7a + 8","7a\u00B2 \u2212 7a + 8"], a:2,
+    e:"The minus sign reaches all three terms: \u22122a\u00B2 \u2212 4a + 6. Then 3a\u00B2, \u22127a, and +8. Choice A is what you get by distributing the minus to only the first term."},
+   {q:"3(2x\u00B2 \u2212 5x) + 5(x\u00B2 + 3x) =", o:["11x\u00B2","11x\u00B2 \u2212 30x","11x\u00B2 + 30x","6x\u00B2 + 15x"], a:0,
+    e:"6x\u00B2 \u2212 15x + 5x\u00B2 + 15x. The x terms cancel exactly, leaving 11x\u00B2."},
+   {q:"Factor completely: 24a\u2077 \u2212 16a\u2074", o:["4a\u2074(6a\u00B3 \u2212 4)","8a\u2074(3a\u00B3 \u2212 2)","8a\u00B3(3a\u2074 \u2212 2a)","8a\u2077(3 \u2212 2a\u00B3)"], a:1,
+    e:"GCF of 24 and 16 is 8; the smallest power of a present is a\u2074. Choice A pulls out too little of the number, and C leaves an a behind inside the bracket."},
+   {q:"Factor: x\u1D50\u207A\u2075 + x\u1D50\u207A\u00B2", o:["x\u1D50(x\u2075 + x\u00B2)","x\u1D50\u207A\u00B2(x\u00B3 + 1)","x\u1D50\u207A\u00B2(x\u00B3)","x\u00B2\u1D50\u207A\u2077"], a:1,
+    e:"The smaller exponent is m+2, so that comes out. What remains is x\u00B3 from the first term and 1 from the second \u2014 not nothing. Choice A factors out less than it could."},
+   {q:"Factor: 7a\u1D56\u207A\u1D57 \u2212 5a\u146B\u207A\u1D57", o:["a\u1D57(7a\u1D56 \u2212 5a\u146B)","a\u1D56\u207A\u146B(7 \u2212 5)","2a\u1D56\u207A\u146B\u207A\u1D57","a\u1D57(2a\u1D56\u146B)"], a:0,
+    e:"Both terms share a\u1D57 and nothing more. Choices C and D try to combine unlike terms \u2014 7a\u1D56 and 5a\u146B do not merge unless p = q."},
+   {q:"If r and s are prime numbers, what is the greatest common factor of 20r, 15rs\u00B2, and 35r\u00B3s?", o:["5r","5rs","35rs","5r\u00B3s\u00B2"], a:0,
+    e:"The GCF of 20, 15 and 35 is 5, and every term has one r. But 20r contains <b>no s at all</b>, so no s can appear in the GCF. A variable missing from even one term is out, however many powers the others carry."}
+  ]
+},
+{
+  id:"trig", title:"Trigonometry in Expression Form", tag:"Geometry", target:900,
+  intro:"Missed on two separate tests, months apart. Two decisions, no arithmetic. <b>Which function?</b> Name the two sides involved &mdash; opposite &amp; hypotenuse means sine, adjacent &amp; hypotenuse means cosine, both legs means tangent. <b>Multiply or divide?</b> If the side you <i>want</i> is the hypotenuse, divide. Otherwise multiply. The unknown side is drawn in brown.",
+  questions:[
+   {q:"In \u25B3DEF the right angle is at F. Side DF = 24 and angle DEF = 58\u00B0. Which expression equals DE?",
+    svg:{bl:"F",tl:"D",br:"E",angleAt:"br",angleText:"58\u00B0",vertical:"24",horizontal:"",hyp:"?"},
+    o:["24 sin 58\u00B0","24 cos 58\u00B0","24 / sin 58\u00B0","24 / cos 58\u00B0"], a:2,
+    e:"DE is the hypotenuse, so we divide. From angle E, side DF is opposite. Opposite + hypotenuse means sine."},
+   {q:"Same triangle. Which expression equals EF?",
+    svg:{bl:"F",tl:"D",br:"E",angleAt:"br",angleText:"58\u00B0",vertical:"24",horizontal:"?",hyp:""},
+    o:["24 tan 58\u00B0","24 / tan 58\u00B0","24 cos 58\u00B0","24 / cos 58\u00B0"], a:1,
+    e:"EF is adjacent to E and DF is opposite E \u2014 two legs, so tangent. We want the adjacent leg, so divide."},
+   {q:"In \u25B3JKL the right angle is at L. Side JK = 26 and angle KJL = 37\u00B0. Which expression equals JL?",
+    svg:{bl:"L",tl:"K",br:"J",angleAt:"br",angleText:"37\u00B0",vertical:"",horizontal:"?",hyp:"26"},
+    o:["26 sin 37\u00B0","26 cos 37\u00B0","26 / sin 37\u00B0","26 / cos 37\u00B0"], a:1,
+    e:"JK is the hypotenuse and is known; JL is adjacent to angle J. Adjacent + hypotenuse means cosine, and we want a leg, so multiply."},
+   {q:"In \u25B3STU the right angle is at T. Side ST = 11 and angle SUT = 33\u00B0. Which expression equals SU?",
+    svg:{bl:"T",tl:"S",br:"U",angleAt:"br",angleText:"33\u00B0",vertical:"11",horizontal:"",hyp:"?"},
+    o:["11 sin 33\u00B0","11 tan 33\u00B0","11 / sin 33\u00B0","11 / tan 33\u00B0"], a:2,
+    e:"SU is the hypotenuse, so divide. ST is opposite angle U, so sine."},
+   {q:"A ladder reaches 21 feet up a wall, making a 68\u00B0 angle with the ground. Which expression gives the ladder's length?",
+    svg:{angleAt:"br",angleText:"68\u00B0",vertical:"21 ft",horizontal:"",hyp:"?",caption:"wall and ground"},
+    o:["21 sin 68\u00B0","21 / sin 68\u00B0","21 cos 68\u00B0","21 / cos 68\u00B0"], a:1,
     e:"The ladder is the hypotenuse, so divide. The height is opposite the angle, so sine."},
-   {q:"From a cliff 150 feet high, the angle of depression to a boat is 22\u00B0. Which expression gives the horizontal distance to the boat?",
-    o:["150 tan 22\u00B0","150 \u00F7 tan 22\u00B0","150 sin 22\u00B0","150 \u00F7 sin 22\u00B0"], a:1,
-    e:"No hypotenuse is involved \u2014 a height and a horizontal distance only \u2014 so tangent. The height is opposite, the distance adjacent, so divide."},
-   {q:"A road climbs at 9\u00B0 over a horizontal distance of 500 feet. Which expression gives the elevation gained?",
-    o:["500 tan 9\u00B0","500 \u00F7 tan 9\u00B0","500 sin 9\u00B0","500 \u00F7 cos 9\u00B0"], a:0,
-    e:"Horizontal distance is adjacent, elevation is opposite, no hypotenuse. Tangent, and we want the opposite leg, so multiply."},
-   {q:"A kite string 70 feet long makes a 48\u00B0 angle with the ground. Which expression gives the kite's height?",
-    o:["70 sin 48\u00B0","70 \u00F7 sin 48\u00B0","70 cos 48\u00B0","70 tan 48\u00B0"], a:0,
+   {q:"From a lighthouse 90 feet high, the angle of depression to a boat is 31\u00B0. Which expression gives the horizontal distance to the boat?",
+    svg:{angleAt:"br",angleText:"31\u00B0",vertical:"90 ft",horizontal:"?",hyp:"",caption:"the angle at the boat equals the angle of depression"},
+    o:["90 tan 31\u00B0","90 / tan 31\u00B0","90 sin 31\u00B0","90 / sin 31\u00B0"], a:1,
+    e:"No hypotenuse is involved \u2014 a height and a horizontal distance only \u2014 so tangent. The height is opposite and the distance adjacent, so divide."},
+   {q:"A ramp rises at 12\u00B0 over a horizontal distance of 340 feet. Which expression gives the elevation gained?",
+    svg:{angleAt:"br",angleText:"12\u00B0",vertical:"?",horizontal:"340 ft",hyp:"",caption:"elevation against horizontal run"},
+    o:["340 tan 12\u00B0","340 / tan 12\u00B0","340 sin 12\u00B0","340 / cos 12\u00B0"], a:0,
+    e:"Horizontal run is adjacent, elevation is opposite, no hypotenuse \u2014 tangent. We want the opposite leg, so multiply."},
+   {q:"A kite string 55 feet long makes a 62\u00B0 angle with the ground. Which expression gives the kite's height?",
+    svg:{angleAt:"br",angleText:"62\u00B0",vertical:"?",horizontal:"",hyp:"55 ft",caption:"string, height and ground"},
+    o:["55 sin 62\u00B0","55 / sin 62\u00B0","55 cos 62\u00B0","55 tan 62\u00B0"], a:0,
     e:"The string is the hypotenuse and is known; the height is opposite. Sine, and we want a leg, so multiply."}
   ]
-};
+}
+];
 
 /* ============================ STATE ============================ */
 const app = document.getElementById('app');
@@ -302,12 +402,15 @@ function home(){
       <p class="meta" style="margin:8px 0">${s? 'Last score: <b>'+s.c+' / '+s.t+'</b> in '+fmt(s.time) : '&nbsp;'}</p>
       <button class="primary" onclick="go('passage','${p.id}')">${s?'Try again':'Start'}</button></div>`;
   });
-  const ms = scores[MATH.id];
-  h += `<h2>Math</h2><div class="card"><h3>${MATH.title}</h3>
-    <div class="meta"><span class="tag">Trigonometry</span>${MATH.questions.length} questions</div>
-    <p class="meta" style="margin:8px 0">${ms? 'Last score: <b>'+ms.c+' / '+ms.t+'</b>' : '&nbsp;'}</p>
-    <button class="primary" onclick="go('math','${MATH.id}')">${ms?'Try again':'Start'}</button></div>
-    <p class="note" style="margin-top:26px">Everything else in the math library is already at 95% untimed &mdash; this is the one that keeps coming back on real tests.</p>`;
+  h += `<h2>Math</h2>`;
+  MATHSETS.forEach(m=>{
+    const ms = scores[m.id];
+    h += `<div class="card"><h3>${m.title}</h3>
+      <div class="meta"><span class="tag">${m.tag}</span>${m.questions.length} questions</div>
+      <p class="meta" style="margin:8px 0">${ms? 'Last score: <b>'+ms.c+' / '+ms.t+'</b>' : '&nbsp;'}</p>
+      <button class="primary" onclick="go('math','${m.id}')">${ms?'Try again':'Start'}</button></div>`;
+  });
+  h += `<p class="note" style="margin-top:26px">Read the explanation on every one you miss, not just the score.</p>`;
   app.innerHTML = h;
 }
 
@@ -392,12 +495,14 @@ window.grade = function(id){
   banner.scrollIntoView({behavior:'smooth'});
 };
 
-function mathView(){
-  const m = MATH;
+function mathView(id){
+  const m = MATHSETS.find(x=>x.id===id);
+  window.__MSET = m;
   let h = `<div class="bar"><button onclick="go('home')">&larr; Back</button><span class="timer" id="timer">0:00</span></div>
     <h2>${m.title}</h2><div class="exp">${m.intro}</div><div class="card">`;
   m.questions.forEach((q,i)=>{
     h += `<div class="q"><div class="qtext">${i+1}. ${q.q}</div>`;
+    if(q.svg) h += triSVG(q.svg);
     q.o.forEach((o,j)=>{ h += `<label class="opt" id="mo${i}_${j}"><input type="radio" name="m${i}" value="${j}">${o}</label>`; });
     h += `<div class="exp hide" id="me${i}"></div></div>`;
   });
@@ -408,8 +513,9 @@ function mathView(){
 
 window.gradeMath = function(){
   stopTimer();
+  const M = window.__MSET;
   let c=0;
-  MATH.questions.forEach((q,i)=>{
+  M.questions.forEach((q,i)=>{
     const sel = document.querySelector(`input[name="m${i}"]:checked`);
     const pick = sel? +sel.value : -1;
     if(pick===q.a) c++;
@@ -418,11 +524,16 @@ window.gradeMath = function(){
     const e=document.getElementById(`me${i}`); e.innerHTML=q.e; e.classList.remove('hide');
     document.querySelectorAll(`input[name="m${i}"]`).forEach(r=>r.disabled=true);
   });
-  const scores=load('scores',{}); scores[MATH.id]={c:c,t:MATH.questions.length,time:elapsed}; save('scores',scores);
+  const scores=load('scores',{}); scores[M.id]={c:c,t:M.questions.length,time:elapsed}; save('scores',scores);
   const b=document.createElement('div'); b.className='card';
-  b.innerHTML=`<div class="score">${c} / ${MATH.questions.length}</div>
+  const tip = M.id==='trig'
+    ? 'If any went wrong, check which of the two decisions failed: naming the sides, or multiply-versus-divide. It is almost always the second.'
+    : (M.id==='powers'
+      ? 'If any went wrong, check whether the coefficient got its exponent, and whether you multiplied exponents where you should have added them.'
+      : 'If any went wrong, check the two rules: terms combine only when every exponent matches, and a variable missing from one term cannot appear in the GCF.');
+  b.innerHTML=`<div class="score">${c} / ${M.questions.length}</div>
     <div class="meta">Time ${fmt(elapsed)}</div>
-    <div class="exp" style="margin-top:12px">If any of these went wrong, check which of the two decisions failed: naming the sides, or multiply-versus-divide. It is almost always the second.</div>
+    <div class="exp" style="margin-top:12px">${tip}</div>
     <button class="primary" style="margin-top:12px" onclick="go('home')">Back to list</button>`;
   app.querySelector('.card').prepend(b);
   b.scrollIntoView({behavior:'smooth'});
@@ -432,7 +543,7 @@ window.go = function(name, id){
   window.scrollTo(0,0);
   if(name==='home') home();
   else if(name==='passage') passageView(id);
-  else if(name==='math') mathView();
+  else if(name==='math') mathView(id);
 };
 
 home();
