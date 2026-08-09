@@ -61,6 +61,30 @@
   ul.compact{margin:6px 0;padding-left:20px}
 
   ul.compact li{margin:3px 0}
+  .btnrow{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .linkish{background:none;border:none;padding:0;color:var(--accent);
+    text-decoration:underline;font-size:14px;cursor:pointer;font-family:inherit}
+
+  /* The printable report. Hidden on screen; it exists only to become the PDF. */
+  #report{display:none}
+  .rmark{font:11px/1 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;
+    border-radius:20px;padding:2px 8px;margin-left:8px;white-space:nowrap}
+  .rmark.ok{color:var(--good);border:1px solid var(--good)}
+  .rmark.no{color:var(--bad);border:1px solid var(--bad)}
+  .ritem{border-top:1px solid var(--line);padding:12px 0}
+
+  @page{margin:14mm}
+  @media print{
+    body{background:#fff}
+    .wrap{max-width:none;padding:0}
+    header, #app{display:none !important}
+    #report{display:block !important}
+    /* Keep a question and its explanation on one page. */
+    .ritem{page-break-inside:avoid;break-inside:avoid}
+    /* Browsers drop background fills when printing, so use rules instead. */
+    #report .exp{background:none;border-left:3px solid var(--accent)}
+    #report .gist{background:none;border:1px solid var(--line)}
+  }
 </style>
 </head>
 <body>
@@ -70,6 +94,7 @@
   <div class="sub" id="subtitle">Reading &amp; targeted math &mdash; built for 2 September</div>
 </header>
 <div id="app"></div>
+<div id="report"></div>
 </div>
 
 <script>
@@ -458,6 +483,7 @@ window.grade = function(id){
   stopTimer();
   const p = PASSAGES.find(x=>x.id===id);
   let c = 0;
+  const items = [];
   p.questions.forEach((q,i)=>{
     const sel = document.querySelector(`input[name="q${i}"]:checked`);
     const pick = sel ? +sel.value : -1;
@@ -473,6 +499,8 @@ window.grade = function(id){
     e.innerHTML = shape + q.e; e.classList.remove('hide');
     document.querySelectorAll(`input[name="q${i}"]`).forEach(r=>r.disabled=true);
 
+    items.push({n:i+1, q:q.q, ok:pick===q.a, e:shape + q.e,
+      picked: pick===-1 ? '(no answer)' : q.o[pick], correct: q.o[q.a]});
   });
   const infTot = p.questions.filter(q=>q.t==="Inference").length;
   let infC = 0;
@@ -480,6 +508,9 @@ window.grade = function(id){
 
   const scores = load('scores',{}); scores[id]={c:c,t:p.questions.length,time:elapsed}; save('scores',scores);
   const yours = document.getElementById('gistbox').value.trim();
+
+  buildReport({title:p.title, c:c, t:p.questions.length, time:elapsed, target:p.target,
+    inf:`${infC} / ${infTot}`, gist:{yours:yours, good:p.gist}, items:items});
 
   const banner = document.createElement('div');
   banner.className='card';
@@ -490,7 +521,7 @@ window.grade = function(id){
     <div class="exp" style="margin-top:14px">${c < p.questions.length-1
       ? 'Compare the two sentences above. When a passage goes badly, the gist is almost always the thing that was vague &mdash; and inference questions are the first to fall, because they are the only ones you cannot answer by looking something up.'
       : 'Well done. Notice how much of that came from having the passage clear before the first question.'}</div>
-    <button class="primary" style="margin-top:14px" onclick="go('home')">Back to list</button>`;
+    ${resultButtons()}`;
   document.getElementById('questions').prepend(banner);
   banner.scrollIntoView({behavior:'smooth'});
 };
@@ -515,6 +546,7 @@ window.gradeMath = function(){
   stopTimer();
   const M = window.__MSET;
   let c=0;
+  const items = [];
   M.questions.forEach((q,i)=>{
     const sel = document.querySelector(`input[name="m${i}"]:checked`);
     const pick = sel? +sel.value : -1;
@@ -523,8 +555,11 @@ window.gradeMath = function(){
     if(pick!==-1 && pick!==q.a) document.getElementById(`mo${i}_${pick}`).classList.add('chosen-wrong');
     const e=document.getElementById(`me${i}`); e.innerHTML=q.e; e.classList.remove('hide');
     document.querySelectorAll(`input[name="m${i}"]`).forEach(r=>r.disabled=true);
+    items.push({n:i+1, q:q.q, ok:pick===q.a, e:q.e, svg:q.svg? triSVG(q.svg):'',
+      picked: pick===-1 ? '(no answer)' : q.o[pick], correct: q.o[q.a]});
   });
   const scores=load('scores',{}); scores[M.id]={c:c,t:M.questions.length,time:elapsed}; save('scores',scores);
+  buildReport({title:M.title, c:c, t:M.questions.length, time:elapsed, target:M.target, items:items});
   const b=document.createElement('div'); b.className='card';
   const tip = M.id==='trig'
     ? 'If any went wrong, check which of the two decisions failed: naming the sides, or multiply-versus-divide. It is almost always the second.'
@@ -534,10 +569,100 @@ window.gradeMath = function(){
   b.innerHTML=`<div class="score">${c} / ${M.questions.length}</div>
     <div class="meta">Time ${fmt(elapsed)}</div>
     <div class="exp" style="margin-top:12px">${tip}</div>
-    <button class="primary" style="margin-top:12px" onclick="go('home')">Back to list</button>`;
+    ${resultButtons()}`;
   app.querySelector('.card').prepend(b);
   b.scrollIntoView({behavior:'smooth'});
 };
+
+/* ==================== REPORT / PDF / EMAIL ==================== */
+/* buildReport() fills #report, which is invisible on screen and is the only
+   thing that prints. "Save as PDF" is just window.print() — Safari's print
+   dialog offers Save as PDF, and on iOS the share sheet hands that PDF to
+   Mail as an attachment. No library, no server. */
+
+let REPORT = null;
+
+function plain(html){
+  const d = document.createElement('div');
+  d.innerHTML = String(html==null?'':html);
+  return (d.textContent||'').replace(/\s+/g,' ').trim();
+}
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function buildReport(r){
+  REPORT = r;
+  const when = new Date().toLocaleDateString(undefined,
+    {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  let h = `<div style="border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:16px">
+      <h1 style="margin:0 0 4px">ISEE Practice &mdash; Results</h1>
+      <div class="sub">${esc(r.title)} &middot; ${when}</div>
+    </div>
+    <div class="score">${r.c} / ${r.t}</div>
+    <div class="meta">Time ${fmt(r.time)}${r.target? ' (target '+fmt(r.target)+')':''}${
+      r.inf? ' &middot; Inference '+r.inf : ''}</div>`;
+  if(r.gist){
+    h += `<div class="gist" style="margin-top:14px"><b>Gist written:</b><br>
+      <i>${esc(r.gist.yours) || '(left blank)'}</i>
+      <div style="margin-top:8px"><b>A good gist:</b><br><i>${r.gist.good}</i></div></div>`;
+  }
+  r.items.forEach(it=>{
+    h += `<div class="ritem">
+      <div class="qtext">${it.n}. ${it.q}<span class="rmark ${it.ok?'ok':'no'}">${it.ok?'correct':'missed'}</span></div>
+      ${it.svg||''}
+      <div class="meta" style="margin:6px 0">Answer given: <b>${it.picked}</b>${
+        it.ok? '' : ' &middot; Correct: <b>'+it.correct+'</b>'}</div>
+      <div class="exp">${it.e}</div></div>`;
+  });
+  document.getElementById('report').innerHTML = h;
+}
+
+/* Recipient lives in localStorage, not in the source, so this public repo
+   does not publish an email address. Asked once per device. */
+function recipient(force){
+  let to = load('mailto','');
+  if(force || !to){
+    to = (prompt('Email results to which address?', to||'')||'').trim();
+    if(!to) return '';
+    save('mailto', to);
+  }
+  return to;
+}
+window.changeMail = function(){ if(recipient(true)) emailReport(); };
+
+window.emailReport = function(){
+  const r = REPORT; if(!r) return;
+  const to = recipient(false); if(!to) return;
+  const L = [`${plain(r.title)} — ${r.c} of ${r.t} correct, time ${fmt(r.time)}`];
+  if(r.inf) L.push(`Inference: ${r.inf}`);
+  if(r.gist) L.push('', 'Gist written: '+(r.gist.yours||'(left blank)'),
+                        'A good gist: '+plain(r.gist.good));
+  const missed = r.items.filter(i=>!i.ok);
+  L.push('', missed.length ? `Missed ${missed.length}:` : 'Nothing missed.');
+  /* Deliberately no explanations here — they are what make a mailto body
+     overflow. The PDF is the full record; this is the scoreboard. */
+  missed.forEach(it=>{
+    const q = plain(it.q);
+    L.push('', `${it.n}. ${q.length>90 ? q.slice(0,90)+'…' : q}`,
+               `    chose: ${plain(it.picked)}`,
+               `    correct: ${plain(it.correct)}`);
+  });
+  if(missed.length) L.push('', 'Full explanations and diagrams are in the PDF.');
+  let body = L.join('\n');
+  if(body.length > 4000) body = body.slice(0,4000) + '\n\n[…truncated — see the PDF]';
+  location.href = 'mailto:' + encodeURIComponent(to)
+    + '?subject=' + encodeURIComponent(`ISEE practice — ${plain(r.title)} — ${r.c}/${r.t}`)
+    + '&body=' + encodeURIComponent(body);
+};
+
+function resultButtons(){
+  return `<div class="btnrow">
+      <button class="primary" onclick="go('home')">Back to list</button>
+      <button onclick="window.print()">Save as PDF</button>
+      <button onclick="emailReport()">Email results</button>
+    </div>
+    <p class="note" style="margin:9px 0 0">On iPhone: <b>Save as PDF</b>, then the share icon, then Mail &mdash; the PDF goes along as an attachment.
+    <button class="linkish" onclick="changeMail()">Change email address</button></p>`;
+}
 
 window.go = function(name, id){
   window.scrollTo(0,0);
