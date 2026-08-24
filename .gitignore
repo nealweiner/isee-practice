@@ -1,1 +1,7 @@
 .DS_Store
+
+# Kept local, never published: PROJECT.md holds Vaughn's name, official ISEE
+# percentiles, and target schools. README.md describes his per-test misses.
+# Both live in ../Vaughn/. Remove the README line if a clean one is written.
+PROJECT.md
+README.md

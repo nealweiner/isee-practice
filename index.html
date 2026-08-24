@@ -61,29 +61,29 @@
   ul.compact{margin:6px 0;padding-left:20px}
 
   ul.compact li{margin:3px 0}
-  .btnrow{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
-  .linkish{background:none;border:none;padding:0;color:var(--accent);
-    text-decoration:underline;font-size:14px;cursor:pointer;font-family:inherit}
-
-  /* The printable report. Hidden on screen; it exists only to become the PDF. */
-  #report{display:none}
-  .rmark{font:11px/1 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;
-    border-radius:20px;padding:2px 8px;margin-left:8px;white-space:nowrap}
-  .rmark.ok{color:var(--good);border:1px solid var(--good)}
-  .rmark.no{color:var(--bad);border:1px solid var(--bad)}
-  .ritem{border-top:1px solid var(--line);padding:12px 0}
-
-  @page{margin:14mm}
+  .rpt-head{border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:16px}
+  .rpt-item{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0;
+    background:#fff;page-break-inside:avoid;break-inside:avoid}
+  .rpt-q{font-weight:bold;margin-bottom:7px}
+  .rpt-row{font-size:14.5px;margin:3px 0}
+  .rpt-row .lab{display:inline-block;min-width:104px;color:#6B6355;font:12px system-ui,sans-serif;
+    text-transform:uppercase;letter-spacing:.04em}
+  .rpt-wrong{color:var(--bad)}
+  .rpt-right{color:var(--good)}
+  .rpt-note{font-size:14px;background:var(--soft);border-left:3px solid var(--accent);
+    padding:8px 11px;margin-top:8px;border-radius:0 5px 5px 0}
+  .rpt-sec{margin-top:22px;font-size:19px;font-weight:bold;color:var(--ink);
+    border-bottom:1px solid var(--line);padding-bottom:4px}
+  .scorebar{display:flex;gap:18px;flex-wrap:wrap;font:14px system-ui,sans-serif;margin:10px 0}
+  .scorebar div{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 13px}
+  .scorebar b{font-size:19px;display:block}
   @media print{
     body{background:#fff}
-    .wrap{max-width:none;padding:0}
-    header, #app{display:none !important}
-    #report{display:block !important}
-    /* Keep a question and its explanation on one page. */
-    .ritem{page-break-inside:avoid;break-inside:avoid}
-    /* Browsers drop background fills when printing, so use rules instead. */
-    #report .exp{background:none;border-left:3px solid var(--accent)}
-    #report .gist{background:none;border:1px solid var(--line)}
+    .wrap{max-width:100%;padding:0}
+    .bar, .noprint, button, header .sub{display:none !important}
+    .rpt-item{border:1px solid #ccc}
+    a{text-decoration:none;color:inherit}
+    h1{font-size:20px}
   }
 </style>
 </head>
@@ -94,7 +94,6 @@
   <div class="sub" id="subtitle">Reading &amp; targeted math &mdash; built for 2 September</div>
 </header>
 <div id="app"></div>
-<div id="report"></div>
 </div>
 
 <script>
@@ -313,52 +312,98 @@ function triSVG(o){
 
 const MATHSETS = [
 {
-  id:"powers", title:"Powers of Powers", tag:"Exponents", target:900,
-  intro:"When a product is raised to a power, <b>every factor inside gets the exponent &mdash; including the number in front</b>. (3x<sup>4</sup>)<sup>2</sup> is 9x<sup>8</sup>, not 3x<sup>8</sup>. That dropped coefficient is the most common slip in this topic.",
+  id:"chain", title:"Multi-Step Symbolic Work", tag:"Algebraic Concepts", target:1080,
+  intro:"Every step here is easy. The <b>sequence</b> is what fails. On the real test you combined the fractions correctly and then stopped one step early &mdash; after three operations there is nothing telling you a fourth remains. <b>Before choosing, ask: is there still a common factor to cancel, or a fraction inside a fraction?</b>",
   questions:[
-   {q:"(5a\u2074)\u00B3 =", o:["5a\u00B9\u00B2","15a\u00B9\u00B2","125a\u2077","125a\u00B9\u00B2"], a:3,
-    e:"The 3 applies to the coefficient too: 5\u00B3 = 125, and (a\u2074)\u00B3 = a\u00B9\u00B2. Choice A drops the coefficient entirely; B uses 5\u00D73 instead of 5\u00B3; C adds the exponents instead of multiplying."},
-   {q:"(3m\u2074n\u00B3)\u00B3 =", o:["3m\u00B9\u00B2n\u2079","9m\u00B9\u00B2n\u2079","27m\u00B9\u00B2n\u2079","27m\u2077n\u2076"], a:2,
-    e:"3\u00B3 = 27, m\u2074\u02E3\u00B3 = m\u00B9\u00B2, n\u00B3\u02E3\u00B3 = n\u2079. Multiply each exponent by the outside power; never add."},
-   {q:"(2a\u2075 / b\u00B3)\u2074 =", o:["2a\u00B2\u2070/b\u00B9\u00B2","8a\u00B2\u2070/b\u00B9\u00B2","16a\u00B2\u2070/b\u00B9\u00B2","16a\u2079/b\u2077"], a:2,
-    e:"The exponent hits the numerator, the denominator, and the 2: 2\u2074 = 16, a\u00B2\u2070, b\u00B9\u00B2."},
-   {q:"(x\u00B3\u207F)\u2075 =", o:["x\u00B9\u2075\u207F","x\u00B3\u207F\u207A\u2075","x\u2078\u207F","x\u00B9\u2075\u207A\u207F"], a:0,
-    e:"Power of a power multiplies: 3n \u00D7 5 = 15n. Choice B adds \u2014 that is the x\u207F\u00B7x\u1D50 rule, a different situation."},
-   {q:"(b\u207F\u207A\u2074)\u00B2 / b\u00B2\u207F =", o:["b\u2078","b\u207F\u207A\u2078","b\u00B2\u207F\u207A\u2078","b\u2074"], a:0,
-    e:"The top becomes b\u00B2\u207F\u207A\u2078. Subtracting 2n leaves b\u2078 \u2014 the n cancels completely and a plain power is left."},
-   {q:"3\u207F\u207A\u00B2 / 3\u207F\u207B\u00B9 =", o:["9","27","3\u00B3\u207F","3\u00B2\u207F\u207A\u00B9"], a:1,
-    e:"Subtract the exponents: (n+2) \u2212 (n\u22121) = 3, so 3\u00B3 = 27. When two exponents differ by a constant, the variable always drops out."},
-   {q:"If 2\u207F = w, which expression represents 2\u207F\u207A\u00B3?", o:["w + 3","w + 8","8w","6w"], a:2,
-    e:"2\u207F\u207A\u00B3 = 2\u207F \u00D7 2\u00B3 = 8w. Adding to the exponent multiplies the value; it never adds to it."},
-   {q:"If 3\u1D4F = p, which expression represents 9\u1D4F?", o:["3p","p\u00B2","9p","p + 3"], a:1,
-    e:"Rewrite one base as a power of the other: 9\u1D4F = (3\u00B2)\u1D4F = (3\u1D4F)\u00B2 = p\u00B2."}
+   {q:"Which expression equals (x/y + x/y)(x/z \u2212 y/x) ?",
+    o:["2(x\u00B2 \u2212 yz) / (yz)","(x/y)((x\u00B2 \u2212 yz)/(xz))","(x\u00B2 \u2212 yz) / (yz)","2(x\u00B2 \u2212 yz) / (xyz)"], a:0,
+    e:"First bracket: x/y + x/y = 2x/y. Second: over the common denominator xz, (x\u00B2 \u2212 yz)/(xz). Multiplying gives 2x(x\u00B2\u2212yz)/(xyz), and the x cancels, leaving 2(x\u00B2\u2212yz)/(yz). <b>Choice B is the trap \u2014 correct, but stopped two steps early.</b> Choice D forgets to cancel the x; choice C loses the 2."},
+   {q:"Written as a single fraction, 1/a \u2212 1/b =",
+    o:["(a \u2212 b)/(ab)","(b \u2212 a)/(ab)","1/(a \u2212 b)","(ab)/(b \u2212 a)"], a:1,
+    e:"Over the common denominator ab: b/(ab) \u2212 a/(ab) = (b\u2212a)/(ab). Each numerator picks up the <i>other</i> denominator, so the order flips. Choice A reverses the subtraction."},
+   {q:"Which expression equals (m/n)(n/p \u2212 p/n) ?",
+    o:["m(n\u00B2 \u2212 p\u00B2)/(n\u00B2p)","m(n \u2212 p)/(np)","(mn \u2212 mp)/(np)","m(n\u00B2 \u2212 p\u00B2)/(np)"], a:0,
+    e:"The bracket over np is (n\u00B2 \u2212 p\u00B2)/(np). Times m/n gives m(n\u00B2\u2212p\u00B2)/(n\u00B2p). Choice D drops an n from the denominator; choice B subtracts numerators without finding a common denominator at all."},
+   {q:"If 6xy \u2212 y = 3 \u2212 18x and x \u2260 1/6, what is the value of y ?",
+    o:["\u22123","3","\u22121/3","1/3"], a:0,
+    e:"Collect the y terms as y(6x \u2212 1). The right side factors as \u22123(6x \u2212 1). So y(6x\u22121) = \u22123(6x\u22121), and dividing by the shared binomial gives y = \u22123. <b>Spotting that both sides carry the same (6x\u22121) is the whole problem</b> \u2014 which is also why you were told x \u2260 1/6."},
+   {q:"If 5xy + y = 2 + 10x, what is the value of y ?",
+    o:["2","\u22122","1/2","5"], a:0,
+    e:"y(5x + 1) = 2(5x + 1), so y = 2. Same structure as the previous question: factor both sides, then cancel the common binomial."},
+   {q:"Simplify: ((x\u00B2 \u2212 9)/(x + 2)) \u00D7 ((x + 2)/(x \u2212 3))",
+    o:["x + 3","x \u2212 3","(x + 3)/(x + 2)","x\u00B2 \u2212 9"], a:0,
+    e:"Factor before cancelling: (x\u22123)(x+3)/(x+2) \u00D7 (x+2)/(x\u22123). Both (x+2) and (x\u22123) cancel, leaving x + 3."},
+   {q:"Written as a single fraction, 2/x + 3/y =",
+    o:["5/(xy)","(2y + 3x)/(xy)","(2x + 3y)/(xy)","5/(x + y)"], a:1,
+    e:"Over xy: 2y/(xy) + 3x/(xy). Choice C swaps which numerator gets which denominator; choice A adds tops and bottoms separately."},
+   {q:"If 1/a + 1/b = 1/c, which expression equals c ?",
+    o:["a + b","ab/(a + b)","(a + b)/(ab)","ab"], a:1,
+    e:"The left side is (a + b)/(ab), so 1/c = (a+b)/(ab). Take the reciprocal of both sides: c = ab/(a+b). <b>Choice C is the reciprocal step forgotten</b> \u2014 one operation short, the same shape as question 1."}
   ]
 },
 {
-  id:"poly", title:"Polynomials: Combining and Factoring", tag:"Algebraic Concepts", target:900,
-  intro:"Two terms combine <b>only if their variable parts are identical</b> &mdash; same letters, same exponents. When factoring, pull out the <b>smallest</b> power of each variable that appears in <i>every</i> term; a variable missing from even one term cannot come out at all.",
+  id:"sci", title:"Scientific Notation and Rates", tag:"Number Sense", target:900,
+  intro:"Two habits. <b>Scientific notation:</b> after dividing, check the front number is at least 1 and under 10 &mdash; if it is 0.6, shift to 6.0 and drop the exponent by one. You have missed this same last step twice. <b>Rate conversions:</b> stack the ratios so units cancel and read off what survives; don't reason about multiplying or dividing.",
   questions:[
-   {q:"9y\u00B2 \u2212 4y \u2212 3y\u00B2 + 7y =", o:["6y\u00B2 + 3y","6y\u00B2 + 11y","6y\u00B3","12y\u00B2 + 3y"], a:0,
-    e:"Group by matching variable parts: (9\u22123)y\u00B2 = 6y\u00B2 and (\u22124+7)y = 3y. The y\u00B2 and y terms never merge into one."},
-   {q:"6m\u00B2n \u2212 3mn\u00B2 + 2m\u00B2n =", o:["5m\u00B3n\u00B3","8m\u00B2n \u2212 3mn\u00B2","8m\u00B2n","5m\u00B2n \u2212 3mn\u00B2"], a:1,
-    e:"6m\u00B2n and 2m\u00B2n match exactly and combine to 8m\u00B2n. The term 3mn\u00B2 has different exponents, so it stays as it is."},
-   {q:"(5a\u00B2 \u2212 3a + 2) \u2212 (2a\u00B2 + 4a \u2212 6) =", o:["3a\u00B2 + a \u2212 4","3a\u00B2 \u2212 7a \u2212 4","3a\u00B2 \u2212 7a + 8","7a\u00B2 \u2212 7a + 8"], a:2,
-    e:"The minus sign reaches all three terms: \u22122a\u00B2 \u2212 4a + 6. Then 3a\u00B2, \u22127a, and +8. Choice A is what you get by distributing the minus to only the first term."},
-   {q:"3(2x\u00B2 \u2212 5x) + 5(x\u00B2 + 3x) =", o:["11x\u00B2","11x\u00B2 \u2212 30x","11x\u00B2 + 30x","6x\u00B2 + 15x"], a:0,
-    e:"6x\u00B2 \u2212 15x + 5x\u00B2 + 15x. The x terms cancel exactly, leaving 11x\u00B2."},
-   {q:"Factor completely: 24a\u2077 \u2212 16a\u2074", o:["4a\u2074(6a\u00B3 \u2212 4)","8a\u2074(3a\u00B3 \u2212 2)","8a\u00B3(3a\u2074 \u2212 2a)","8a\u2077(3 \u2212 2a\u00B3)"], a:1,
-    e:"GCF of 24 and 16 is 8; the smallest power of a present is a\u2074. Choice A pulls out too little of the number, and C leaves an a behind inside the bracket."},
-   {q:"Factor: x\u1D50\u207A\u2075 + x\u1D50\u207A\u00B2", o:["x\u1D50(x\u2075 + x\u00B2)","x\u1D50\u207A\u00B2(x\u00B3 + 1)","x\u1D50\u207A\u00B2(x\u00B3)","x\u00B2\u1D50\u207A\u2077"], a:1,
-    e:"The smaller exponent is m+2, so that comes out. What remains is x\u00B3 from the first term and 1 from the second \u2014 not nothing. Choice A factors out less than it could."},
-   {q:"Factor: 7a\u1D56\u207A\u1D57 \u2212 5a\u146B\u207A\u1D57", o:["a\u1D57(7a\u1D56 \u2212 5a\u146B)","a\u1D56\u207A\u146B(7 \u2212 5)","2a\u1D56\u207A\u146B\u207A\u1D57","a\u1D57(2a\u1D56\u146B)"], a:0,
-    e:"Both terms share a\u1D57 and nothing more. Choices C and D try to combine unlike terms \u2014 7a\u1D56 and 5a\u146B do not merge unless p = q."},
-   {q:"If r and s are prime numbers, what is the greatest common factor of 20r, 15rs\u00B2, and 35r\u00B3s?", o:["5r","5rs","35rs","5r\u00B3s\u00B2"], a:0,
-    e:"The GCF of 20, 15 and 35 is 5, and every term has one r. But 20r contains <b>no s at all</b>, so no s can appear in the GCF. A variable missing from even one term is out, however many powers the others carry."}
+   {q:"(4.2 \u00D7 10\u2075) / (7.0 \u00D7 10\u207B\u00B2) =",
+    o:["6.0 \u00D7 10\u2077","6.0 \u00D7 10\u2076","0.6 \u00D7 10\u2077","6.0 \u00D7 10\u00B3"], a:1,
+    e:"4.2/7.0 = 0.6 and the exponents give 10\u2077, so 0.6 \u00D7 10\u2077 \u2014 which is <b>not</b> scientific notation. Shift one place: 6.0 \u00D7 10\u2076. Choice A is that step skipped, exactly one power of ten too big. This is the miss you made on two different tests."},
+   {q:"(8.1 \u00D7 10\u2074) / (9.0 \u00D7 10\u207B\u2075) =",
+    o:["9.0 \u00D7 10\u2079","9.0 \u00D7 10\u2078","0.9 \u00D7 10\u2079","9.0 \u00D7 10\u207B\u00B9"], a:1,
+    e:"8.1/9.0 = 0.9 and 10\u2074\u207B\u207B\u2075 = 10\u2079, so 0.9 \u00D7 10\u2079 = 9.0 \u00D7 10\u2078."},
+   {q:"(2.4 \u00D7 10\u00B3)(5.0 \u00D7 10\u2074) =",
+    o:["1.2 \u00D7 10\u2077","12 \u00D7 10\u2077","1.2 \u00D7 10\u2078","7.4 \u00D7 10\u2077"], a:2,
+    e:"2.4 \u00D7 5.0 = 12 and 10\u00B3\u207A\u2074 = 10\u2077, giving 12 \u00D7 10\u2077. Here the front number is too <i>big</i>, so it shifts the other way: 1.2 \u00D7 10\u2078. Normalization runs in both directions."},
+   {q:"(1.5 \u00D7 10\u207B\u00B3) / (5.0 \u00D7 10\u00B2) =",
+    o:["3.0 \u00D7 10\u207B\u2076","3.0 \u00D7 10\u207B\u2075","0.3 \u00D7 10\u207B\u2075","3.0 \u00D7 10\u207B\u00B9"], a:0,
+    e:"1.5/5.0 = 0.3 and 10\u207B\u00B3\u207B\u00B2 = 10\u207B\u2075, so 0.3 \u00D7 10\u207B\u2075 = 3.0 \u00D7 10\u207B\u2076. With negative exponents the corrected exponent goes further down, which feels wrong and isn't."},
+   {q:"A tank fills at 4 gallons per minute. Which expression gives the rate in liters per hour? (1 gallon = 3.785 liters)",
+    o:["(4 \u00D7 60) / 3.785","4 \u00D7 60 \u00D7 3.785","(4 \u00D7 3.785) / 60","(60 \u00D7 3.785) / 4"], a:1,
+    e:"Stack them: (4 gal/min)(60 min/hr)(3.785 L/gal). Minutes cancel, gallons cancel, liters per hour survives \u2014 so everything multiplies."},
+   {q:"A car travels 66 feet per second. Which expression gives its speed in miles per hour? (5280 feet = 1 mile)",
+    o:["(66 \u00D7 5280) / 3600","(66 \u00D7 3600) / 5280","66 \u00D7 3600 \u00D7 5280","(3600 \u00D7 5280) / 66"], a:1,
+    e:"(66 ft/sec)(3600 sec/hr)(1 mile/5280 ft). Seconds cancel; feet are on top, so 5280 must be underneath to remove them."},
+   {q:"A pipe drains 15 quarts per minute. Which expression gives the rate in gallons per hour? (4 quarts = 1 gallon)",
+    o:["(15 \u00D7 60) / 4","15 \u00D7 60 \u00D7 4","(15 \u00D7 4) / 60","60 / (15 \u00D7 4)"], a:0,
+    e:"(15 qt/min)(60 min/hr)(1 gal / 4 qt). Quarts are on top, so the 4 goes underneath."},
+   {q:"A printer produces 24 pages per minute. Which expression gives the number of hours needed for 8,640 pages?",
+    o:["8640 / (24 \u00D7 60)","(8640 \u00D7 60) / 24","8640 / 24","(8640 \u00D7 24) / 60"], a:0,
+    e:"Pages divided by pages-per-minute gives minutes; divide again by 60 for hours. <b>Choice C stops at minutes</b> \u2014 one step short, the recurring shape."}
   ]
 },
 {
-  id:"trig", title:"Trigonometry in Expression Form", tag:"Geometry", target:900,
-  intro:"Missed on two separate tests, months apart. Two decisions, no arithmetic. <b>Which function?</b> Name the two sides involved &mdash; opposite &amp; hypotenuse means sine, adjacent &amp; hypotenuse means cosine, both legs means tangent. <b>Multiply or divide?</b> If the side you <i>want</i> is the hypotenuse, divide. Otherwise multiply. The unknown side is drawn in brown.",
+  id:"cbd", title:"Comparisons: Test Before You Answer", tag:"Quantitative Reasoning", target:900,
+  intro:"You have missed five comparison questions across four tests, every one answered in <b>7 to 21 seconds</b> against averages two to four times longer. The pattern is picturing one case, seeing a clean relationship, and committing. <b>Test a second case first \u2014 try 1, a fraction, a negative, and a long thin shape.</b> If two cases disagree the answer is (D); but not all of these are (D), so actually check.",
+  questions:[
+   {q:"A rectangle has an area of 12 cm\u00B2.<br><b>Column A:</b> its perimeter<br><b>Column B:</b> 14 cm",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
+    e:"A 3\u00D74 rectangle has perimeter 14 \u2014 equal. A 2\u00D76 has perimeter 16 \u2014 greater. Two cases disagree, so (D). <b>A fixed area does not fix the shape</b>; long thin rectangles have huge perimeters."},
+   {q:"A triangle has an area of 20 cm\u00B2.<br><b>Column A:</b> its perimeter<br><b>Column B:</b> 20 cm",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
+    e:"Same idea. A triangle with base 400 and height 0.1 still has area 20 and an enormous perimeter. Area never pins down perimeter."},
+   {q:"x is a positive integer.<br><b>Column A:</b> x\u00B2<br><b>Column B:</b> x\u00B3",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
+    e:"If x = 2 then 4 < 8 and B wins. But if x = 1 both are 1 \u2014 equal. <b>Always test x = 1 when a variable is a positive integer.</b> It breaks most of these."},
+   {q:"0 < x < 1.<br><b>Column A:</b> x\u00B2<br><b>Column B:</b> \u221Ax",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
+    e:"Between 0 and 1 the order reverses: x\u00B2 < x < \u221Ax. Try x = 1/4 \u2014 then x\u00B2 = 1/16 against \u221Ax = 1/2. This one <i>is</i> determined, so (D) would be wrong."},
+   {q:"n is a negative number.<br><b>Column A:</b> n\u00B2<br><b>Column B:</b> \u2212n",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
+    e:"n = \u22122 gives 4 against 2, so A. But n = \u22120.5 gives 0.25 against 0.5, so B. \u201CNegative number\u201D includes fractions between \u22121 and 0 \u2014 the case people forget."},
+   {q:"The original price of a headset is $80.<br><b>Column A:</b> the price after a 20% reduction<br><b>Column B:</b> the price after a 10% reduction, then another 10% off the reduced price",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
+    e:"A: 80 \u00D7 0.80 = $64. B: 80 \u00D7 0.90 \u00D7 0.90 = $64.80. <b>Successive percentages never simply add</b> \u2014 the second 10% comes off a smaller number, so two 10% cuts remove less than one 20% cut. Fully determined, not (D)."},
+   {q:"<b>Column A:</b> the perimeter of a square with area 36<br><b>Column B:</b> the circumference of a circle with radius 4",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
+    e:"The square has side 6 and perimeter 24. The circle has circumference 8\u03C0 \u2248 25.1. Both shapes are pinned down by what you were given, so it is determined \u2014 and you need \u03C0 \u2248 3.14, not 3."},
+   {q:"<b>Column A:</b> 20% of 80<br><b>Column B:</b> 80% of 20",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:2,
+    e:"Both equal 16. In general a% of b always equals b% of a, since both are ab/100. Worth recognising on sight."}
+  ]
+},
+{
+  id:"trig", title:"Trigonometry in Expression Form", tag:"Geometry", target:600,
+  intro:"Kept as maintenance \u2014 missed on two separate tests months apart. Two decisions, no arithmetic. <b>Which function?</b> Name the two sides involved: opposite &amp; hypotenuse means sine, adjacent &amp; hypotenuse means cosine, both legs means tangent. <b>Multiply or divide?</b> Divide only when the side you <i>want</i> is the hypotenuse. The unknown side is drawn in brown.",
   questions:[
    {q:"In \u25B3DEF the right angle is at F. Side DF = 24 and angle DEF = 58\u00B0. Which expression equals DE?",
     svg:{bl:"F",tl:"D",br:"E",angleAt:"br",angleText:"58\u00B0",vertical:"24",horizontal:"",hyp:"?"},
@@ -372,22 +417,10 @@ const MATHSETS = [
     svg:{bl:"L",tl:"K",br:"J",angleAt:"br",angleText:"37\u00B0",vertical:"",horizontal:"?",hyp:"26"},
     o:["26 sin 37\u00B0","26 cos 37\u00B0","26 / sin 37\u00B0","26 / cos 37\u00B0"], a:1,
     e:"JK is the hypotenuse and is known; JL is adjacent to angle J. Adjacent + hypotenuse means cosine, and we want a leg, so multiply."},
-   {q:"In \u25B3STU the right angle is at T. Side ST = 11 and angle SUT = 33\u00B0. Which expression equals SU?",
-    svg:{bl:"T",tl:"S",br:"U",angleAt:"br",angleText:"33\u00B0",vertical:"11",horizontal:"",hyp:"?"},
-    o:["11 sin 33\u00B0","11 tan 33\u00B0","11 / sin 33\u00B0","11 / tan 33\u00B0"], a:2,
-    e:"SU is the hypotenuse, so divide. ST is opposite angle U, so sine."},
-   {q:"A ladder reaches 21 feet up a wall, making a 68\u00B0 angle with the ground. Which expression gives the ladder's length?",
-    svg:{angleAt:"br",angleText:"68\u00B0",vertical:"21 ft",horizontal:"",hyp:"?",caption:"wall and ground"},
-    o:["21 sin 68\u00B0","21 / sin 68\u00B0","21 cos 68\u00B0","21 / cos 68\u00B0"], a:1,
-    e:"The ladder is the hypotenuse, so divide. The height is opposite the angle, so sine."},
    {q:"From a lighthouse 90 feet high, the angle of depression to a boat is 31\u00B0. Which expression gives the horizontal distance to the boat?",
     svg:{angleAt:"br",angleText:"31\u00B0",vertical:"90 ft",horizontal:"?",hyp:"",caption:"the angle at the boat equals the angle of depression"},
     o:["90 tan 31\u00B0","90 / tan 31\u00B0","90 sin 31\u00B0","90 / sin 31\u00B0"], a:1,
     e:"No hypotenuse is involved \u2014 a height and a horizontal distance only \u2014 so tangent. The height is opposite and the distance adjacent, so divide."},
-   {q:"A ramp rises at 12\u00B0 over a horizontal distance of 340 feet. Which expression gives the elevation gained?",
-    svg:{angleAt:"br",angleText:"12\u00B0",vertical:"?",horizontal:"340 ft",hyp:"",caption:"elevation against horizontal run"},
-    o:["340 tan 12\u00B0","340 / tan 12\u00B0","340 sin 12\u00B0","340 / cos 12\u00B0"], a:0,
-    e:"Horizontal run is adjacent, elevation is opposite, no hypotenuse \u2014 tangent. We want the opposite leg, so multiply."},
    {q:"A kite string 55 feet long makes a 62\u00B0 angle with the ground. Which expression gives the kite's height?",
     svg:{angleAt:"br",angleText:"62\u00B0",vertical:"?",horizontal:"",hyp:"55 ft",caption:"string, height and ground"},
     o:["55 sin 62\u00B0","55 / sin 62\u00B0","55 cos 62\u00B0","55 tan 62\u00B0"], a:0,
@@ -395,6 +428,284 @@ const MATHSETS = [
   ]
 }
 ];
+
+/* ==================== LaTeX EXPORT (all client-side) ==================== */
+/* Builds a .tex file from the miss log and downloads it. Compiles with plain
+   pdflatex \u2014 no packages beyond geometry/xcolor/parskip.                  */
+
+const SUP = {'\u2070':'0','\u00B9':'1','\u00B2':'2','\u00B3':'3','\u2074':'4','\u2075':'5',
+             '\u2076':'6','\u2077':'7','\u2078':'8','\u2079':'9','\u207A':'+','\u207B':'-',
+             '\u207F':'n','\u1D50':'m','\u1D4F':'k','\u1D56':'p','\u146B':'q'};
+
+const UNI = {
+  '\u00D7':'\u0001M\u0001\\times\u0001M\u0001', '\u2212':'\u0001M\u0001-\u0001M\u0001',
+  '\u00F7':'\u0001M\u0001\\div\u0001M\u0001', '\u03C0':'\u0001M\u0001\\pi\u0001M\u0001',
+  '\u2248':'\u0001M\u0001\\approx\u0001M\u0001', '\u2260':'\u0001M\u0001\\neq\u0001M\u0001',
+  '\u2264':'\u0001M\u0001\\leq\u0001M\u0001', '\u2265':'\u0001M\u0001\\geq\u0001M\u0001',
+  '\u00B0':'\\textdegree{}', '\u25B3':'\u0001M\u0001\\triangle\u0001M\u0001',
+  '\u2014':'---', '\u2013':'--', '\u00B7':'\u0001M\u0001\\cdot\u0001M\u0001',
+  '\u2018':"`", '\u2019':"'", '\u201C':"``", '\u201D':"''", '\u2026':'\\ldots{}',
+  '\u00A0':' ', '\u2192':'\u0001M\u0001\\rightarrow\u0001M\u0001',
+  '\u2190':'\u0001M\u0001\\leftarrow\u0001M\u0001'
+};
+
+/* Turn "A / B" into \frac{A}{B}, for the LaTeX export only — the on-screen app
+   keeps the slash. An operand is either a balanced (...) group, whose outer
+   parentheses the fraction bar makes redundant, or a run of non-space
+   characters. "sin 58" and friends are held together, and a trailing full stop
+   is left outside so "1/6." does not become \frac{1}{6.}. Both sides are marked
+   with placeholders here so the escaper still processes their text normally. */
+const FRAC_FN = /^(sin|cos|tan|log|ln)$/i;
+function markFracs(t){
+  const atom = c => c !== undefined && /[^\s()\/=+<>,;:]/.test(c);
+  let out = '', i = 0;
+  while(i < t.length){
+    if(t[i] !== '/'){ out += t[i++]; continue; }
+
+    // numerator: walk backwards through what has already been emitted
+    let lEnd = out.length;
+    while(lEnd > 0 && out[lEnd-1] === ' ') lEnd--;
+    let lStart, lParen = false;
+    if(lEnd > 0 && out[lEnd-1] === ')'){
+      let d = 0, k = lEnd;
+      while(k > 0){ k--; if(out[k] === ')') d++; else if(out[k] === '('){ d--; if(!d) break; } }
+      if(d !== 0){ out += t[i++]; continue; }
+      lStart = k; lParen = true;
+    } else {
+      let k = lEnd;
+      while(k > 0 && atom(out[k-1])) k--;
+      lStart = k;
+    }
+    let num = out.slice(lStart, lEnd);
+    if(lParen) num = num.slice(1,-1);
+
+    // denominator: walk forwards through the rest of the string
+    let m = i + 1;
+    while(m < t.length && t[m] === ' ') m++;
+    let rStart = m, rEnd, rParen = false;
+    if(t[m] === '('){
+      let d = 0, n = m;
+      for(; n < t.length; n++){
+        if(t[n] === '(') d++;
+        else if(t[n] === ')'){ d--; if(!d){ n++; break; } }
+      }
+      if(d !== 0){ out += t[i++]; continue; }
+      rEnd = n; rParen = true;
+    } else {
+      let n = m;
+      while(n < t.length && atom(t[n])) n++;
+      if(FRAC_FN.test(t.slice(m,n))){            // keep "sin 58" as one operand
+        let p = n;
+        while(p < t.length && t[p] === ' ') p++;
+        while(p < t.length && atom(t[p])) p++;
+        n = p;
+      }
+      rEnd = n;
+    }
+    let den = t.slice(rStart, rEnd);
+    if(rParen) den = den.slice(1,-1);
+    else {
+      const tail = den.match(/[.,;:!?]+$/);
+      if(tail){ den = den.slice(0, -tail[0].length); rEnd -= tail[0].length; }
+    }
+
+    // only numeric-looking pairs become fractions, so "and/or" is left alone
+    if(!num || !den || !(/\d/.test(num) || /\d/.test(den))){ out += t[i++]; continue; }
+    out = out.slice(0, lStart) + '\u0001F\u0001' + num + '\u0001D\u0001' + den + '\u0001G\u0001';
+    i = rEnd;
+  }
+  return out;
+}
+
+function texEscape(str){
+  let t = String(str);
+
+  // 1. decode entities to real characters first
+  t = t.replace(/&mdash;/g,'\u2014').replace(/&ndash;/g,'\u2013')
+       .replace(/&nbsp;/g,' ').replace(/&rarr;/g,'\u2192').replace(/&larr;/g,'\u2190')
+       .replace(/&middot;/g,'\u00B7').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+       .replace(/&amp;/g,'&');
+
+  // 2. HTML tags -> placeholders the escaper will not touch
+  t = t.replace(/<br\s*\/?>/gi, '\u0001BR\u0001')
+       .replace(/<b>/gi,'\u0001BS\u0001').replace(/<\/b>/gi,'\u0001BE\u0001')
+       .replace(/<i>/gi,'\u0001IS\u0001').replace(/<\/i>/gi,'\u0001IE\u0001')
+       .replace(/<sup>/gi,'\u0001SS\u0001').replace(/<\/sup>/gi,'\u0001SE\u0001')
+       .replace(/<[^>]+>/g,'');
+
+  t = markFracs(t);
+
+  // 3. escape LaTeX specials on plain text
+  t = t.replace(/\\/g,'\u0001TB\u0001')
+       .replace(/([&%#_{}$])/g, '\\$1')
+       .replace(/\^/g,'\\textasciicircum{}')
+       .replace(/~/g,'\\textasciitilde{}');
+
+  // 4. superscript runs -> one \textsuperscript{}
+  const supRe = new RegExp('[' + Object.keys(SUP).join('') + ']+', 'g');
+  t = t.replace(supRe, m => '\u0001SS\u0001' + Array.from(m).map(c=>SUP[c]).join('') + '\u0001SE\u0001');
+
+  // 5. maths-y unicode
+  t = t.replace(/\u221A\s*([A-Za-z0-9]+)/g, (m,x)=>'\u0001M\u0001\\sqrt{'+x+'}\u0001M\u0001');
+  t = t.replace(/\u221A/g,'\u0001M\u0001\\surd\u0001M\u0001');
+  Object.keys(UNI).forEach(c=>{ t = t.split(c).join(UNI[c]); });
+
+  // 6. anything still non-ASCII is dropped rather than breaking the build
+  t = t.replace(/[^\x00-\x7F\u0001]/g,'');
+
+  // 7. placeholders -> real LaTeX
+  t = t.replace(/\u0001BR\u0001/g,'\\par ')
+       .replace(/\u0001BS\u0001/g,'{\\bfseries ').replace(/\u0001BE\u0001/g,'}')
+       .replace(/\u0001IS\u0001/g,'{\\itshape ').replace(/\u0001IE\u0001/g,'}')
+       .replace(/\u0001SS\u0001/g,'\\textsuperscript{').replace(/\u0001SE\u0001/g,'}')
+       .replace(/\u0001TB\u0001/g,'\\textbackslash{}')
+       .replace(/\u0001M\u0001/g,'$')
+       .replace(/\u0001F\u0001/g,'$\\frac{\\text{')
+       .replace(/\u0001D\u0001/g,'}}{\\text{')
+       .replace(/\u0001G\u0001/g,'}}$');
+  return t;
+}
+
+function buildTex(){
+  const log = load('misslog', []);
+  const d = new Date();
+  const date = d.toLocaleDateString('en-GB',{day:'numeric', month:'long', year:'numeric'});
+
+  const bySet = {};
+  log.forEach(e=>{ (bySet[e.setTitle] = bySet[e.setTitle] || []).push(e); });
+
+  let out = [];
+  out.push('\\documentclass[11pt]{article}');
+  out.push('\\usepackage[margin=0.9in]{geometry}');
+  out.push('\\usepackage{amsmath}\\usepackage{xcolor}\\usepackage{parskip}');
+  out.push('\\definecolor{ink}{HTML}{1A2B4A}\\definecolor{bad}{HTML}{A32B2B}\\definecolor{good}{HTML}{1E7A4A}\\definecolor{acc}{HTML}{7A4A1F}');
+  out.push('\\newcommand{\\lab}[1]{{\\footnotesize\\textsc{\\textcolor{acc}{#1}}}\\quad}');
+  out.push('\\begin{document}');
+  out.push('\\begin{center}{\\Large\\bfseries\\textcolor{ink}{ISEE Review Sheet}}\\\\[2pt]{\\small ' + texEscape(date) + '}\\end{center}');
+  out.push('\\hrule\\vspace{10pt}');
+
+  if(log.length === 0){
+    out.push('Nothing logged yet.');
+  } else {
+    out.push('{\\small ' + log.length + ' question' + (log.length===1?'':'s') + ' missed. For each one, read the explanation, then write in your own words what you would do differently.}\\vspace{6pt}');
+    Object.keys(bySet).forEach(setTitle=>{
+      out.push('\\par\\vspace{12pt}\\noindent{\\large\\bfseries\\textcolor{ink}{' + texEscape(setTitle) + '}}\\par');
+      out.push('\\vspace{2pt}\\hrule\\vspace{8pt}');
+      bySet[setTitle].forEach(e=>{
+        out.push('\\noindent{\\bfseries ' + texEscape(e.question) + '}\\par\\vspace{3pt}');
+        if(e.gist) out.push('\\noindent\\lab{Your gist}\\textit{' + texEscape(e.gist) + '}\\par');
+        out.push('\\noindent\\lab{You chose}\\textcolor{bad}{' + texEscape(e.chosen) + '}\\par');
+        out.push('\\noindent\\lab{Answer}\\textcolor{good}{' + texEscape(e.correct) + '}\\par');
+        if(e.shape) out.push('\\noindent\\lab{Failure shape}' + texEscape(e.shape) + '\\par');
+        if(e.type)  out.push('\\noindent\\lab{Type}' + texEscape(e.type) + '\\par');
+        out.push('\\vspace{3pt}\\noindent\\fbox{\\parbox{0.96\\textwidth}{\\small ' + texEscape(e.explanation) + '}}\\par');
+        out.push('\\vspace{4pt}\\noindent\\lab{What I would do differently}\\rule{0.55\\textwidth}{0.4pt}\\par');
+        out.push('\\vspace{12pt}');
+      });
+    });
+  }
+  out.push('\\end{document}');
+  return out.join('\n');
+}
+
+window.downloadTex = function(){
+  const blob = new Blob([buildTex()], {type:'application/x-tex'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = 'isee-review-' + stamp + '.tex';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+};
+
+/* ==================== MISS LOG / TEST MODE / REPORT ==================== */
+
+function logMisses(entries){
+  const log = load('misslog', []);
+  entries.forEach(e=>log.push(e));
+  // keep the most recent 200 so storage never fills
+  save('misslog', log.slice(-200));
+}
+
+let TESTMODE = false;
+let TESTQUEUE = [];
+let TESTSTART = 0;
+
+window.startFullTest = function(kind){
+  TESTMODE = true;
+  TESTSTART = Date.now();
+  save('misslog', []);            // a fresh session starts a fresh report
+  TESTQUEUE = (kind === 'math')
+    ? MATHSETS.map(m=>({type:'math', id:m.id}))
+    : PASSAGES.map(p=>({type:'passage', id:p.id})).concat(MATHSETS.map(m=>({type:'math', id:m.id})));
+  nextInTest();
+};
+
+function nextInTest(){
+  if(TESTQUEUE.length === 0){ TESTMODE = false; go('report'); return; }
+  const item = TESTQUEUE.shift();
+  window.scrollTo(0,0);
+  if(item.type === 'passage') passageView(item.id); else mathView(item.id);
+}
+
+function reportView(){
+  stopTimer();
+  const log = load('misslog', []);
+  const bySet = {};
+  log.forEach(e=>{ (bySet[e.setTitle] = bySet[e.setTitle] || []).push(e); });
+
+  const totalMissed = log.length;
+  const totalAsked  = log.length ? log[0].sessionTotal || 0 : 0;
+
+  let h = `<div class="bar noprint">
+      <button onclick="go('home')">&larr; Back</button>
+      <button class="primary" onclick="window.print()">Print / Save as PDF</button>
+      <button onclick="downloadTex()">Download .tex</button>
+      <button onclick="clearReport()">Clear</button>
+    </div>`;
+
+  h += `<div class="rpt-head">
+    <h2 style="margin:0">Review sheet</h2>
+    <div class="meta">Generated ${new Date().toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long', year:'numeric'})}</div>
+  </div>`;
+
+  if(totalMissed === 0){
+    h += `<div class="card"><p>Nothing logged yet. Work through a set, or run a full session from the home screen, and every question you miss lands here.</p></div>`;
+    app.innerHTML = h; return;
+  }
+
+  // score strip
+  const scores = load('scores',{});
+  h += `<div class="scorebar">`;
+  Object.keys(bySet).forEach(k=>{
+    const n = bySet[k].length;
+    h += `<div>${k}<b>${n} missed</b></div>`;
+  });
+  h += `</div>`;
+
+  h += `<p class="note">One card per question missed. The explanation is on each card &mdash; read it, then say out loud what you would do differently. That sentence is the part that sticks.</p>`;
+
+  Object.keys(bySet).forEach(setTitle=>{
+    h += `<div class="rpt-sec">${setTitle}</div>`;
+    bySet[setTitle].forEach(e=>{
+      h += `<div class="rpt-item">
+        <div class="rpt-q">${e.question}</div>
+        ${e.gist ? `<div class="rpt-row"><span class="lab">Your gist</span><i>${e.gist}</i></div>` : ''}
+        <div class="rpt-row"><span class="lab">You chose</span><span class="rpt-wrong">${e.chosen}</span></div>
+        <div class="rpt-row"><span class="lab">Answer</span><span class="rpt-right">${e.correct}</span></div>
+        ${e.shape ? `<div class="rpt-row"><span class="lab">Failure shape</span>${e.shape}</div>` : ''}
+        ${e.type ? `<div class="rpt-row"><span class="lab">Question type</span>${e.type}</div>` : ''}
+        <div class="rpt-note">${e.explanation}</div>
+        <div class="rpt-row" style="margin-top:9px"><span class="lab">What I'd do differently</span>
+          <span style="display:inline-block;border-bottom:1px solid var(--line);min-width:58%">&nbsp;</span></div>
+      </div>`;
+    });
+  });
+
+  app.innerHTML = h;
+}
+
+window.clearReport = function(){ save('misslog', []); go('report'); };
 
 /* ============================ STATE ============================ */
 const app = document.getElementById('app');
@@ -418,7 +729,19 @@ function stopTimer(){ clearInterval(timerId); timerId=null; }
 function home(){
   stopTimer();
   const scores = load('scores',{});
-  let h = `<p class="note">Read the passage, write the one-sentence gist, then answer. The gist is the whole point &mdash; when it is vague, the inference questions are the ones that fall.</p><h2>Reading</h2>`;
+  const nMiss = load('misslog',[]).length;
+  let h = `<h2>Run a full session</h2>
+    <div class="card">
+      <p class="meta" style="margin:0 0 10px">No answers shown until the end. Every question missed goes onto a review sheet you can print.</p>
+      <button class="primary" onclick="startFullTest('math')">Math only &mdash; 29 questions</button>
+      <button onclick="startFullTest('all')" style="margin-left:8px">Everything &mdash; 4 passages + 29 questions</button>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 4px">Review sheet</h3>
+      <div class="meta">${nMiss? nMiss+' question'+(nMiss===1?'':'s')+' logged' : 'nothing logged yet'}</div>
+      <button class="primary" style="margin-top:10px" onclick="go('report')">Open &amp; print</button>
+    </div>
+    <p class="note">Read the passage, write the one-sentence gist, then answer. The gist is the whole point &mdash; when it is vague, the inference questions are the ones that fall.</p><h2>Reading</h2>`;
   PASSAGES.forEach(p=>{
     const s = scores[p.id];
     const inf = p.questions.filter(q=>q.t==="Inference").length;
@@ -483,7 +806,6 @@ window.grade = function(id){
   stopTimer();
   const p = PASSAGES.find(x=>x.id===id);
   let c = 0;
-  const items = [];
   p.questions.forEach((q,i)=>{
     const sel = document.querySelector(`input[name="q${i}"]:checked`);
     const pick = sel ? +sel.value : -1;
@@ -496,11 +818,9 @@ window.grade = function(id){
       const s = SHAPES[q.w[pick]];
       shape = `<span class="shape">${s[0]}</span> ${s[1]}<br><br>`;
     }
-    e.innerHTML = shape + q.e; e.classList.remove('hide');
+    if(!TESTMODE){ e.innerHTML = shape + q.e; e.classList.remove('hide'); }
     document.querySelectorAll(`input[name="q${i}"]`).forEach(r=>r.disabled=true);
 
-    items.push({n:i+1, q:q.q, ok:pick===q.a, e:shape + q.e,
-      picked: pick===-1 ? '(no answer)' : q.o[pick], correct: q.o[q.a]});
   });
   const infTot = p.questions.filter(q=>q.t==="Inference").length;
   let infC = 0;
@@ -509,8 +829,26 @@ window.grade = function(id){
   const scores = load('scores',{}); scores[id]={c:c,t:p.questions.length,time:elapsed}; save('scores',scores);
   const yours = document.getElementById('gistbox').value.trim();
 
-  buildReport({title:p.title, c:c, t:p.questions.length, time:elapsed, target:p.target,
-    inf:`${infC} / ${infTot}`, gist:{yours:yours, good:p.gist}, items:items});
+  const missed = [];
+  p.questions.forEach((q,i)=>{
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const pick = sel ? +sel.value : -1;
+    if(pick === q.a) return;
+    missed.push({
+      setTitle: p.title + ' (' + p.genre + ')',
+      question: (i+1) + '. ' + q.q,
+      chosen: pick === -1 ? 'left blank' : q.o[pick],
+      correct: q.o[q.a],
+      explanation: q.e,
+      type: q.t,
+      shape: (pick !== -1 && q.w && q.w[pick]) ? SHAPES[q.w[pick]][0] + ' \u2014 ' + SHAPES[q.w[pick]][1] : '',
+      gist: yours,
+      sessionTotal: p.questions.length
+    });
+  });
+  logMisses(missed);
+
+  if(TESTMODE){ nextInTest(); return; }
 
   const banner = document.createElement('div');
   banner.className='card';
@@ -521,7 +859,7 @@ window.grade = function(id){
     <div class="exp" style="margin-top:14px">${c < p.questions.length-1
       ? 'Compare the two sentences above. When a passage goes badly, the gist is almost always the thing that was vague &mdash; and inference questions are the first to fall, because they are the only ones you cannot answer by looking something up.'
       : 'Well done. Notice how much of that came from having the passage clear before the first question.'}</div>
-    ${resultButtons()}`;
+    <button class="primary" style="margin-top:14px" onclick="go('home')">Back to list</button>`;
   document.getElementById('questions').prepend(banner);
   banner.scrollIntoView({behavior:'smooth'});
 };
@@ -546,129 +884,58 @@ window.gradeMath = function(){
   stopTimer();
   const M = window.__MSET;
   let c=0;
-  const items = [];
   M.questions.forEach((q,i)=>{
     const sel = document.querySelector(`input[name="m${i}"]:checked`);
     const pick = sel? +sel.value : -1;
     if(pick===q.a) c++;
     document.getElementById(`mo${i}_${q.a}`).classList.add('correct');
     if(pick!==-1 && pick!==q.a) document.getElementById(`mo${i}_${pick}`).classList.add('chosen-wrong');
-    const e=document.getElementById(`me${i}`); e.innerHTML=q.e; e.classList.remove('hide');
+    const e=document.getElementById(`me${i}`);
+    if(!TESTMODE){ e.innerHTML=q.e; e.classList.remove('hide'); }
     document.querySelectorAll(`input[name="m${i}"]`).forEach(r=>r.disabled=true);
-    items.push({n:i+1, q:q.q, ok:pick===q.a, e:q.e, svg:q.svg? triSVG(q.svg):'',
-      picked: pick===-1 ? '(no answer)' : q.o[pick], correct: q.o[q.a]});
   });
   const scores=load('scores',{}); scores[M.id]={c:c,t:M.questions.length,time:elapsed}; save('scores',scores);
-  buildReport({title:M.title, c:c, t:M.questions.length, time:elapsed, target:M.target, items:items});
+
+  const missedM=[];
+  M.questions.forEach((q,i)=>{
+    const sel=document.querySelector(`input[name="m${i}"]:checked`);
+    const pick=sel? +sel.value : -1;
+    if(pick===q.a) return;
+    missedM.push({
+      setTitle: M.title,
+      question: (i+1)+'. '+q.q,
+      chosen: pick===-1 ? 'left blank' : q.o[pick],
+      correct: q.o[q.a],
+      explanation: q.e,
+      type: M.tag,
+      shape: '',
+      sessionTotal: M.questions.length
+    });
+  });
+  logMisses(missedM);
+  if(TESTMODE){ nextInTest(); return; }
   const b=document.createElement('div'); b.className='card';
-  const tip = M.id==='trig'
-    ? 'If any went wrong, check which of the two decisions failed: naming the sides, or multiply-versus-divide. It is almost always the second.'
-    : (M.id==='powers'
-      ? 'If any went wrong, check whether the coefficient got its exponent, and whether you multiplied exponents where you should have added them.'
-      : 'If any went wrong, check the two rules: terms combine only when every exponent matches, and a variable missing from one term cannot appear in the GCF.');
+  const TIPS = {
+    chain:'On any you missed, check whether your answer was actually <i>wrong</i> or just <i>unfinished</i>. Stopping one step early is the thing to watch for.',
+    sci:  'On any you missed, check whether the front number ended between 1 and 10 \u2014 and on the rate questions, whether the units actually cancelled.',
+    cbd:  'On any you missed, ask how many cases you tested before answering. One is never enough.',
+    trig: 'On any you missed, check which of the two decisions failed: naming the sides, or multiply-versus-divide. It is almost always the second.'
+  };
+  const tip = TIPS[M.id] || 'Read the explanation on every one you missed.';
   b.innerHTML=`<div class="score">${c} / ${M.questions.length}</div>
     <div class="meta">Time ${fmt(elapsed)}</div>
     <div class="exp" style="margin-top:12px">${tip}</div>
-    ${resultButtons()}`;
+    <button class="primary" style="margin-top:12px" onclick="go('home')">Back to list</button>`;
   app.querySelector('.card').prepend(b);
   b.scrollIntoView({behavior:'smooth'});
 };
-
-/* ==================== REPORT / PDF / EMAIL ==================== */
-/* buildReport() fills #report, which is invisible on screen and is the only
-   thing that prints. "Save as PDF" is just window.print() — Safari's print
-   dialog offers Save as PDF, and on iOS the share sheet hands that PDF to
-   Mail as an attachment. No library, no server. */
-
-let REPORT = null;
-
-function plain(html){
-  const d = document.createElement('div');
-  d.innerHTML = String(html==null?'':html);
-  return (d.textContent||'').replace(/\s+/g,' ').trim();
-}
-function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-
-function buildReport(r){
-  REPORT = r;
-  const when = new Date().toLocaleDateString(undefined,
-    {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-  let h = `<div style="border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:16px">
-      <h1 style="margin:0 0 4px">ISEE Practice &mdash; Results</h1>
-      <div class="sub">${esc(r.title)} &middot; ${when}</div>
-    </div>
-    <div class="score">${r.c} / ${r.t}</div>
-    <div class="meta">Time ${fmt(r.time)}${r.target? ' (target '+fmt(r.target)+')':''}${
-      r.inf? ' &middot; Inference '+r.inf : ''}</div>`;
-  if(r.gist){
-    h += `<div class="gist" style="margin-top:14px"><b>Gist written:</b><br>
-      <i>${esc(r.gist.yours) || '(left blank)'}</i>
-      <div style="margin-top:8px"><b>A good gist:</b><br><i>${r.gist.good}</i></div></div>`;
-  }
-  r.items.forEach(it=>{
-    h += `<div class="ritem">
-      <div class="qtext">${it.n}. ${it.q}<span class="rmark ${it.ok?'ok':'no'}">${it.ok?'correct':'missed'}</span></div>
-      ${it.svg||''}
-      <div class="meta" style="margin:6px 0">Answer given: <b>${it.picked}</b>${
-        it.ok? '' : ' &middot; Correct: <b>'+it.correct+'</b>'}</div>
-      <div class="exp">${it.e}</div></div>`;
-  });
-  document.getElementById('report').innerHTML = h;
-}
-
-/* Recipient lives in localStorage, not in the source, so this public repo
-   does not publish an email address. Asked once per device. */
-function recipient(force){
-  let to = load('mailto','');
-  if(force || !to){
-    to = (prompt('Email results to which address?', to||'')||'').trim();
-    if(!to) return '';
-    save('mailto', to);
-  }
-  return to;
-}
-window.changeMail = function(){ if(recipient(true)) emailReport(); };
-
-window.emailReport = function(){
-  const r = REPORT; if(!r) return;
-  const to = recipient(false); if(!to) return;
-  const L = [`${plain(r.title)} — ${r.c} of ${r.t} correct, time ${fmt(r.time)}`];
-  if(r.inf) L.push(`Inference: ${r.inf}`);
-  if(r.gist) L.push('', 'Gist written: '+(r.gist.yours||'(left blank)'),
-                        'A good gist: '+plain(r.gist.good));
-  const missed = r.items.filter(i=>!i.ok);
-  L.push('', missed.length ? `Missed ${missed.length}:` : 'Nothing missed.');
-  /* Deliberately no explanations here — they are what make a mailto body
-     overflow. The PDF is the full record; this is the scoreboard. */
-  missed.forEach(it=>{
-    const q = plain(it.q);
-    L.push('', `${it.n}. ${q.length>90 ? q.slice(0,90)+'…' : q}`,
-               `    chose: ${plain(it.picked)}`,
-               `    correct: ${plain(it.correct)}`);
-  });
-  if(missed.length) L.push('', 'Full explanations and diagrams are in the PDF.');
-  let body = L.join('\n');
-  if(body.length > 4000) body = body.slice(0,4000) + '\n\n[…truncated — see the PDF]';
-  location.href = 'mailto:' + encodeURIComponent(to)
-    + '?subject=' + encodeURIComponent(`ISEE practice — ${plain(r.title)} — ${r.c}/${r.t}`)
-    + '&body=' + encodeURIComponent(body);
-};
-
-function resultButtons(){
-  return `<div class="btnrow">
-      <button class="primary" onclick="go('home')">Back to list</button>
-      <button onclick="window.print()">Save as PDF</button>
-      <button onclick="emailReport()">Email results</button>
-    </div>
-    <p class="note" style="margin:9px 0 0">On iPhone: <b>Save as PDF</b>, then the share icon, then Mail &mdash; the PDF goes along as an attachment.
-    <button class="linkish" onclick="changeMail()">Change email address</button></p>`;
-}
 
 window.go = function(name, id){
   window.scrollTo(0,0);
   if(name==='home') home();
   else if(name==='passage') passageView(id);
   else if(name==='math') mathView(id);
+  else if(name==='report') reportView();
 };
 
 home();
