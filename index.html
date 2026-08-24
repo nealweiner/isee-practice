@@ -61,6 +61,9 @@
   ul.compact{margin:6px 0;padding-left:20px}
 
   ul.compact li{margin:3px 0}
+  .linkish{background:none;border:none;padding:0;color:var(--accent);
+    text-decoration:underline;font:inherit;font-size:14px;cursor:pointer}
+  .scorebar .meta{display:block;font-size:12px}
   .frac{display:inline-flex;flex-direction:column;vertical-align:middle;
     text-align:center;margin:0 .18em;line-height:1.2}
   .frac .fnum{border-bottom:1.5px solid currentColor;padding:0 .34em}
@@ -682,6 +685,7 @@ function reportView(){
       <button onclick="go('home')">&larr; Back</button>
       <button class="primary" onclick="window.print()">Print / Save as PDF</button>
       <button onclick="downloadTex()">Download .tex</button>
+      <button onclick="emailReport()">Email results</button>
       <button onclick="clearReport()">Clear</button>
     </div>`;
 
@@ -699,11 +703,18 @@ function reportView(){
   const scores = load('scores',{});
   h += `<div class="scorebar">`;
   Object.keys(bySet).forEach(k=>{
-    const n = bySet[k].length;
-    h += `<div>${k}<b>${n} missed</b></div>`;
+    const rows = bySet[k], last = rows[rows.length-1];
+    const bits = [];
+    if(last.setScore)      bits.push(last.setScore + ' correct');
+    if(last.setTime != null) bits.push(fmt(last.setTime));
+    if(last.inference)     bits.push('inference ' + last.inference);
+    h += `<div>${k}<b>${rows.length} missed</b>` +
+         (bits.length ? `<span class="meta">${bits.join(' &middot; ')}</span>` : '') +
+         `</div>`;
   });
   h += `</div>`;
 
+  h += `<p class="note noprint" style="margin-bottom:2px">On iPhone: <b>Print / Save as PDF</b>, then the share icon, then Mail &mdash; the PDF goes as an attachment. <b>Email results</b> sends the scores and the list of misses as plain text. <button class="linkish" onclick="changeMail()">Change email address</button></p>`;
   h += `<p class="note">One card per question missed. The explanation is on each card &mdash; read it, then say out loud what you would do differently. That sentence is the part that sticks.</p>`;
 
   Object.keys(bySet).forEach(setTitle=>{
@@ -725,6 +736,67 @@ function reportView(){
 
   app.innerHTML = h;
 }
+
+/* Results by email. The address is kept in localStorage rather than in the
+   source, so this public repo does not publish one; it is asked for once per
+   device. The body is a scoreboard plus the misses -- no explanations, which
+   are what push a mailto: URL past what some clients will accept. */
+function plainText(html){
+  const d = document.createElement('div');
+  d.innerHTML = String(html == null ? '' : html);
+  return (d.textContent || '').replace(/\s+/g, ' ').trim();
+}
+function recipient(force){
+  let to = load('mailto', '');
+  if(force || !to){
+    to = (prompt('Email results to which address?', to || '') || '').trim();
+    if(!to) return '';
+    save('mailto', to);
+  }
+  return to;
+}
+window.changeMail = function(){ if(recipient(true)) emailReport(); };
+
+window.emailReport = function(){
+  const log = load('misslog', []);
+  if(!log.length){ alert('Nothing logged yet \u2014 work through a set first.'); return; }
+  const to = recipient(false);
+  if(!to) return;
+
+  const bySet = {};
+  log.forEach(e => { (bySet[e.setTitle] = bySet[e.setTitle] || []).push(e); });
+
+  const when = new Date().toLocaleDateString(undefined,
+    {day:'numeric', month:'long', year:'numeric'});
+  const L = ['ISEE practice \u2014 ' + when, ''];
+
+  Object.keys(bySet).forEach(k => {
+    const rows = bySet[k], last = rows[rows.length-1], bits = [];
+    if(last.setScore)        bits.push(last.setScore + ' correct');
+    if(last.setTime != null) bits.push(fmt(last.setTime));
+    if(last.inference)       bits.push('inference ' + last.inference);
+    bits.push(rows.length + ' missed');
+    L.push(k + ' \u2014 ' + bits.join(', '));
+  });
+
+  Object.keys(bySet).forEach(k => {
+    L.push('', k + ':');
+    bySet[k].forEach(e => {
+      const q = plainText(e.question);
+      L.push('', '  ' + (q.length > 90 ? q.slice(0,90) + '\u2026' : q),
+                 '      chose:   ' + plainText(e.chosen),
+                 '      correct: ' + plainText(e.correct));
+    });
+  });
+  L.push('', 'Explanations and diagrams are in the PDF.');
+
+  let body = L.join('\n');
+  if(body.length > 4000) body = body.slice(0,4000) + '\n\n[\u2026truncated \u2014 see the PDF]';
+  location.href = 'mailto:' + encodeURIComponent(to)
+    + '?subject=' + encodeURIComponent('ISEE practice \u2014 ' + when
+        + ' \u2014 ' + log.length + ' missed')
+    + '&body=' + encodeURIComponent(body);
+};
 
 window.clearReport = function(){ save('misslog', []); go('report'); };
 
@@ -863,6 +935,9 @@ window.grade = function(id){
       explanation: q.e,
       type: q.t,
       shape: (pick !== -1 && q.w && q.w[pick]) ? SHAPES[q.w[pick]][0] + ' \u2014 ' + SHAPES[q.w[pick]][1] : '',
+      setScore: c + ' / ' + p.questions.length,
+      setTime: elapsed,
+      inference: infC + ' / ' + infTot,
       gist: yours,
       sessionTotal: p.questions.length
     });
@@ -930,6 +1005,8 @@ window.gradeMath = function(){
       explanation: q.e,
       type: M.tag,
       shape: '',
+      setScore: c + ' / ' + M.questions.length,
+      setTime: elapsed,
       sessionTotal: M.questions.length
     });
   });
