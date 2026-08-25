@@ -1,573 +1,1040 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pre–Civil War Study App</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ISEE Practice</title>
 <style>
   :root{
-    --navy:#1e3a5f; --navy2:#2c5282; --gold:#d69e2e; --cream:#fdf6e3;
-    --green:#2f855a; --red:#c53030; --paper:#ffffff; --ink:#1a202c;
-    --soft:#edf2f7; --line:#e2e8f0;
+    --ink:#1A2B4A; --accent:#7A4A1F; --soft:#F3F0EA; --bg:#FBFAF7;
+    --good:#1E7A4A; --bad:#A32B2B; --line:#DDD6C9;
   }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:linear-gradient(160deg,#f7fafc,#e8eef5);color:var(--ink);line-height:1.5}
-  .topbar{position:sticky;top:0;z-index:50}
-  header{background:var(--navy);color:#fff;padding:16px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.15)}
-  header h1{margin:0;font-size:19px;letter-spacing:.3px}
-  header p{margin:4px 0 0;font-size:13px;opacity:.85}
-  .stats{display:flex;justify-content:center;gap:10px;background:#16304f;padding:8px 10px;border-top:1px solid #294c73}
-  .stats .pill{background:rgba(255,255,255,.1);color:#fff;border-radius:99px;padding:5px 13px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px}
-  .stats .pill.gold{background:rgba(214,158,46,.25);color:#ffe08a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 Georgia,'Iowan Old Style',serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:24px 18px 80px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:22px}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--accent);font-size:14px}
+  h2{font-size:21px;margin:26px 0 6px}
+  button{font-family:inherit;font-size:15px;cursor:pointer;border-radius:6px;
+    border:1px solid var(--ink);background:#fff;color:var(--ink);padding:9px 16px}
+  button:hover{background:var(--soft)}
+  button.primary{background:var(--ink);color:#fff}
+  button.primary:hover{opacity:.88}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;margin:12px 0}
+  .card h3{margin:0 0 4px;font-size:18px}
+  .meta{font-size:13px;color:#6B6355}
+  .tag{display:inline-block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+    background:var(--soft);border:1px solid var(--line);border-radius:20px;
+    padding:2px 9px;margin-right:6px;color:var(--accent);font-family:system-ui,sans-serif}
+  .passage{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+  .passage p{margin:0 0 13px;position:relative;padding-left:34px}
+  .ln{position:absolute;left:0;top:2px;font:11px/1 system-ui,sans-serif;color:#9A9284}
+  .gist{background:var(--soft);border:1px solid var(--accent);border-radius:10px;
+    padding:14px 16px;margin:18px 0}
+  .gist textarea{width:100%;min-height:56px;font:15px/1.5 Georgia,serif;padding:9px;
+    border:1px solid var(--line);border-radius:6px;resize:vertical}
+  .q{border-top:1px solid var(--line);padding:16px 0}
+  .q:first-of-type{border-top:none}
+  .qtext{font-weight:bold;margin-bottom:9px}
+  label.opt{display:block;padding:8px 11px;margin:5px 0;border:1px solid var(--line);
+    border-radius:7px;cursor:pointer;background:#fff}
+  label.opt:hover{background:var(--soft)}
+  label.opt input{margin-right:9px}
+  label.opt.correct{border-color:var(--good);background:#EEF7F1}
+  label.opt.chosen-wrong{border-color:var(--bad);background:#FBEFEF}
+  .exp{font-size:14.5px;background:var(--soft);border-left:3px solid var(--accent);
+    padding:10px 13px;margin-top:9px;border-radius:0 6px 6px 0}
+  .shape{font:11px/1 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--bad);border:1px solid var(--bad);border-radius:20px;padding:2px 7px;margin-right:6px}
+  .bar{position:sticky;top:0;background:var(--bg);padding:9px 0;z-index:9;
+    border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;
+    font:14px system-ui,sans-serif;flex-wrap:wrap}
+  .timer{font-variant-numeric:tabular-nums;font-weight:bold}
+  .over{color:var(--bad)}
+  .score{font-size:30px;font-weight:bold}
+  .hide{display:none}
+  .note{font-size:14px;color:#6B6355;font-style:italic}
+  ul.compact{margin:6px 0;padding-left:20px}
 
-  /* campaign map */
-  .card.campaign{background:#1e3a5f;background:linear-gradient(135deg,#1e3a5f,#2c5282);color:#fff;border:none}
-  .campaign h3{margin:0 0 4px;color:#fff;font-size:17px}
-  .campaign .sub{font-size:13px;opacity:.85;margin:0 0 12px}
-  .vbar{position:relative;height:16px;background:#9aa7b5;border-radius:99px;overflow:visible;margin:18px 0 8px}
-  .vfill{height:100%;background:linear-gradient(90deg,#3a6ea5,#5b8fc4);border-radius:99px;transition:width .6s}
-  .vflag{position:absolute;top:-13px;transform:translateX(-50%);font-size:22px;transition:left .6s;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
-  .vlabel{text-align:center;font-weight:700;font-size:15px;margin-bottom:12px}
-  .terrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:7px}
-  .terr{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:7px 5px;text-align:center;font-size:11px;opacity:.65;transition:.3s}
-  .terr.won{background:rgba(91,143,196,.45);border-color:#7fb0e0;opacity:1;font-weight:700}
-  .terr .tflag{font-size:18px;display:block;margin-bottom:2px}
-  .victory{margin-top:14px;background:var(--gold);color:#1a202c;border-radius:12px;padding:12px;text-align:center;font-weight:800;font-size:16px}
-  .resetlink{display:block;text-align:center;color:#a0aec0;font-size:12px;margin-top:14px;cursor:pointer;text-decoration:underline}
-
-  /* gold toast */
-  #toasts{position:fixed;left:0;right:0;bottom:24px;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:100}
-  .toast{background:var(--navy);color:#ffe08a;font-weight:800;padding:10px 18px;border-radius:99px;box-shadow:0 4px 14px rgba(0,0,0,.3);font-size:15px;animation:toastpop .4s ease,toastfade .4s ease 1.6s forwards}
-  .toast.terr{background:var(--gold);color:#1a202c}
-  @keyframes toastpop{from{opacity:0;transform:translateY(18px) scale(.9)}to{opacity:1;transform:none}}
-  @keyframes toastfade{to{opacity:0;transform:translateY(-10px)}}
-  .wrap{max-width:760px;margin:0 auto;padding:16px}
-  .bar{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin:14px 0 4px}
-  .bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--gold),#f6c34a);transition:width .4s}
-  .barlabel{font-size:12px;color:#4a5568;text-align:center;margin-bottom:6px}
-
-  /* nav buttons */
-  .btn{display:inline-block;border:none;cursor:pointer;font-size:16px;font-weight:600;border-radius:12px;padding:13px 18px;transition:transform .08s,box-shadow .2s}
-  .btn:active{transform:scale(.97)}
-  .btn.primary{background:var(--navy2);color:#fff;box-shadow:0 3px 8px rgba(44,82,130,.3)}
-  .btn.gold{background:var(--gold);color:#1a202c;box-shadow:0 3px 8px rgba(214,158,46,.35)}
-  .btn.ghost{background:#fff;color:var(--navy2);border:2px solid var(--navy2)}
-  .btn.block{display:block;width:100%;margin-top:10px;text-align:center}
-
-  /* topic list */
-  .card{background:var(--paper);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid var(--line)}
-  .topiccard{display:flex;align-items:center;gap:14px;cursor:pointer}
-  .topiccard .emoji{font-size:30px;flex-shrink:0}
-  .topiccard .t{flex:1}
-  .topiccard .t h3{margin:0;font-size:16px}
-  .topiccard .t span{font-size:12px;color:#718096}
-  .check{font-size:20px;color:var(--green)}
-  .check.todo{color:#cbd5e0}
-
-  /* reading view */
-  .summary{font-size:16px}
-  .summary h2{color:var(--navy);margin-top:0}
-  .summary ul{padding-left:20px}
-  .summary li{margin:6px 0}
-  .tag{display:inline-block;background:var(--soft);color:var(--navy2);font-size:11px;font-weight:700;
-    padding:3px 9px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-
-  .flash{background:#fffdf5;border:1px solid #f0e3b8;border-radius:14px;padding:14px;margin:12px 0}
-  .flash .q{font-weight:600}
-  .flash .qlabel{color:var(--gold);font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-  .ans{margin-top:10px;background:#e9f6ee;border:1px solid #b7e0c6;color:#22543d;border-radius:10px;padding:10px;display:none;font-weight:600}
-  .ans.show{display:block;animation:pop .25s ease}
-  @keyframes pop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-  .flashin{display:block;width:100%;margin-top:10px;padding:11px 13px;font-size:15px;border:2px solid var(--line);
-    border-radius:10px;outline:none;font-family:inherit}
-  .flashin:focus{border-color:var(--navy2)}
-  .flashin[readonly]{background:#f7fafc;color:#4a5568}
-  .reveal{margin-top:10px;background:#fff;border:2px solid var(--gold);color:#9c6f0e;font-weight:700;
-    border-radius:10px;padding:9px 14px;cursor:pointer;font-size:14px}
-
-  .navrow{display:flex;gap:10px;margin-top:18px}
-  .navrow .btn{flex:1}
-
-  /* quiz */
-  .qcount{font-size:13px;color:#718096;text-align:center;margin-bottom:6px}
-  .qtext{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:14px}
-  .opt{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:12px;
-    padding:13px 15px;margin:9px 0;font-size:15px;cursor:pointer;transition:.15s}
-  .opt:hover{border-color:var(--navy2)}
-  .opt.correct{background:#e9f6ee;border-color:var(--green);color:#22543d;font-weight:700}
-  .opt.wrong{background:#fdecec;border-color:var(--red);color:#742a2a}
-  .opt.disabled{cursor:default}
-  .explain{margin-top:12px;background:var(--soft);border-radius:12px;padding:12px;font-size:14px;display:none}
-  .explain.show{display:block}
-  .explain b{color:var(--navy)}
-
-  .scorebox{text-align:center;padding:10px}
-  .scorebox .big{font-size:54px;font-weight:800;color:var(--navy)}
-  .scorebox .msg{font-size:18px;margin:6px 0 16px;font-weight:600}
-  .review h4{margin:18px 0 6px;color:var(--navy)}
-  .ritem{font-size:14px;padding:10px;border-radius:10px;margin:6px 0;border:1px solid var(--line)}
-  .ritem.ok{background:#f0faf4}
-  .ritem.no{background:#fdf2f2}
-  .ritem .icon{font-weight:800;margin-right:6px}
-  footer{text-align:center;font-size:12px;color:#a0aec0;padding:20px}
-  .hidden{display:none!important}
+  ul.compact li{margin:3px 0}
+  .linkish{background:none;border:none;padding:0;color:var(--accent);
+    text-decoration:underline;font:inherit;font-size:14px;cursor:pointer}
+  .scorebar .meta{display:block;font-size:12px}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;
+    text-align:center;margin:0 .18em;line-height:1.2}
+  .frac .fnum{border-bottom:1.5px solid currentColor;padding:0 .34em}
+  .frac .fden{padding:0 .34em}
+  .rpt-head{border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:16px}
+  .rpt-item{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0;
+    background:#fff;page-break-inside:avoid;break-inside:avoid}
+  .rpt-q{font-weight:bold;margin-bottom:7px}
+  .rpt-row{font-size:14.5px;margin:3px 0}
+  .rpt-row .lab{display:inline-block;min-width:104px;color:#6B6355;font:12px system-ui,sans-serif;
+    text-transform:uppercase;letter-spacing:.04em}
+  .rpt-wrong{color:var(--bad)}
+  .rpt-right{color:var(--good)}
+  .rpt-note{font-size:14px;background:var(--soft);border-left:3px solid var(--accent);
+    padding:8px 11px;margin-top:8px;border-radius:0 5px 5px 0}
+  .rpt-sec{margin-top:22px;font-size:19px;font-weight:bold;color:var(--ink);
+    border-bottom:1px solid var(--line);padding-bottom:4px}
+  .scorebar{display:flex;gap:18px;flex-wrap:wrap;font:14px system-ui,sans-serif;margin:10px 0}
+  .scorebar div{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 13px}
+  .scorebar b{font-size:19px;display:block}
+  @media print{
+    body{background:#fff}
+    .wrap{max-width:100%;padding:0}
+    .bar, .noprint, button, header .sub{display:none !important}
+    .rpt-item{border:1px solid #ccc}
+    a{text-decoration:none;color:inherit}
+    h1{font-size:20px}
+  }
 </style>
 </head>
 <body>
-<div class="topbar">
-  <header>
-    <h1>📗 Pre–Civil War: March to Victory</h1>
-    <p>General Vaughn — study to earn gold &amp; free territory for the Union!</p>
-  </header>
-  <div id="stats" class="stats"></div>
+<div class="wrap">
+<header>
+  <h1>ISEE Practice</h1>
+  <div class="sub" id="subtitle">Reading &amp; targeted math &mdash; built for 2 September</div>
+</header>
+<div id="app"></div>
 </div>
 
-<div class="wrap" id="app"></div>
-<footer>Study packet for the era before the Civil War • For the Union! 🇺🇸</footer>
-<div id="toasts"></div>
-
 <script>
-/* ---------------- DATA ---------------- */
-const TOPICS = [
-  { emoji:"🔑", title:"Key Vocabulary",
-    summary:`<span class="tag">Definitions</span>
-      <ul>
-       <li><b>Abolitionist</b> – a person who wanted to <b>abolish (end) slavery</b>.</li>
-       <li><b>Sectionalism</b> – loyalty to your own <b>region</b> (North or South) instead of the whole country; each region puts its own interests first.</li>
-       <li><b>States' rights</b> – the belief that <b>states</b>, not the federal government, should make big decisions (like whether to allow slavery).</li>
-       <li><b>Popular sovereignty</b> – letting the <b>people of a territory vote</b> on whether slavery is allowed.</li>
-       <li><b>Underground Railroad</b> – a secret <b>network of routes and safe houses</b> that helped enslaved people escape (not a real train!).</li>
-      </ul>`,
-    flash:[
-      {q:"What does an <i>abolitionist</i> want to do?", a:"End slavery."},
-      {q:"What is <i>popular sovereignty</i>?", a:"Letting the people of a territory vote on whether to allow slavery."}
-    ]},
-  { emoji:"🔥", title:"Nat Turner's Rebellion",
-    summary:`<span class="tag">Day 1</span>
-      <p>Nat Turner was an enslaved <b>preacher</b> who led a <b>violent slave rebellion in Virginia</b>. He and his followers killed about <b>55–60 white people</b> before it was <b>crushed</b>. Turner was <b>caught and executed</b>.</p>
-      <p><b>Biggest result:</b> the frightened South passed <b>harsher laws</b> to control enslaved people — including banning teaching them to read.</p>`,
-    flash:[
-      {q:"Who led the rebellion, and where?", a:"Nat Turner, an enslaved preacher, in Virginia."},
-      {q:"What was one <i>result</i> of the rebellion?", a:"The South passed harsher laws controlling enslaved people."}
-    ]},
-  { emoji:"✊", title:"Angelina Grimké",
-    summary:`<span class="tag">Day 1</span>
-      <p>A <b>white Southern woman</b> raised on a plantation who became an <b>abolitionist and women's rights activist</b>. She argued slavery was a <b>sin and un-Christian</b>, and that it broke the Declaration of Independence's promise that "all men are created equal."</p>
-      <p>She <b>convinced women using religion and morality</b>, urging them to <b>read, pray, speak up, and sign petitions</b> to the <b>state legislatures</b> — even if only six women signed.</p>`,
-    flash:[
-      {q:"Why did Grimké believe slavery was wrong?", a:"It was a sin and un-Christian (and against 'all men are created equal')."},
-      {q:"What action did she want Southern women to take?", a:"Sign petitions and speak up to the legislatures."}
-    ]},
-  { emoji:"📰", title:"William Lloyd Garrison",
-    summary:`<span class="tag">Day 2</span>
-      <p>A <b>white abolitionist</b> who published the famous anti-slavery newspaper <b><i>The Liberator</i></b>. He demanded the <b>immediate</b> end of slavery and helped found the American Anti-Slavery Society.</p>`,
-    flash:[
-      {q:"What newspaper did Garrison publish?", a:"The Liberator."},
-      {q:"Did he want slavery ended slowly or immediately?", a:"Immediately."}
-    ]},
-  { emoji:"📚", title:"Frederick Douglass",
-    summary:`<span class="tag">Day 2</span>
-      <p>Born <b>enslaved</b>, Douglass <b>escaped</b> and became the most famous <b>Black abolitionist</b> — a powerful speaker and writer who published his <b>autobiography</b> and a newspaper, the <b>North Star</b>.</p>
-      <ul>
-        <li><b>Learning to read:</b> his <b>mistress</b> taught him the <b>alphabet</b>, but her husband made her stop — so he traded <b>bread to poor white boys</b> for reading lessons.</li>
-        <li><b>How reading felt:</b> it made him <b>frustrated and even suicidal</b> ("a curse rather than a blessing") because it showed him how wrong slavery was — but it also gave him <b>hope of freedom</b>.</li>
-        <li><b>Fighting Mr. Covey (a "slave-breaker"):</b> Douglass <b>fought back</b>; afterward Covey never beat him again and Douglass was <b>not punished</b>. It was a <b>turning point</b> that made him feel like a <b>man, determined to be free</b>.</li>
-      </ul>`,
-    flash:[
-      {q:"How did Douglass finish learning to read?", a:"By trading bread to poor white boys for reading lessons."},
-      {q:"What happened after he fought back against Mr. Covey?", a:"He was not punished, and Covey never beat him again."}
-    ]},
-  { emoji:"🌟", title:"Harriet Tubman",
-    summary:`<span class="tag">Day 2</span>
-      <p>An enslaved woman who <b>escaped</b>, then <b>returned many times</b> to lead other enslaved people to freedom on the <b>Underground Railroad</b>. She was nicknamed <b>"Moses"</b> and never lost a passenger.</p>`,
-    flash:[
-      {q:"What was Tubman's role on the Underground Railroad?", a:"A conductor — she escaped and returned many times to free others."},
-      {q:"What was her nickname?", a:"“Moses.”"}
-    ]},
-  { emoji:"📖", title:"Harriet Beecher Stowe",
-    summary:`<span class="tag">Day 2</span>
-      <p>She wrote <b><i>Uncle Tom's Cabin</i></b>, an <b>anti-slavery novel</b>. It was hugely popular in the <b>North</b> and <b>infuriated the South</b>.</p>`,
-    flash:[
-      {q:"What book did she write?", a:"Uncle Tom's Cabin."},
-      {q:"How did the South react to it?", a:"They were infuriated/angered by it."}
-    ]},
-  { emoji:"⛓️", title:"The Amistad Case",
-    summary:`<span class="tag">Day 2 &middot; 1841</span>
-      <p>A group of <b>enslaved Africans revolted on a Spanish ship</b> (<i>La Amistad</i>) and took control of it. Their case reached the <b>U.S. Supreme Court</b>, where former president <b>John Quincy Adams</b> defended them.</p>
-      <p>The Court ruled they were <b>freed</b>, and <b>abolitionists raised money to send them home to Africa</b>.</p>`,
-    flash:[
-      {q:"Who defended the Africans in court?", a:"John Quincy Adams (a former president)."},
-      {q:"What was the final ruling?", a:"The Africans were freed."}
-    ]},
-  { emoji:"⚖️", title:"Compromise of 1850 & Fugitive Slave Act",
-    summary:`<span class="tag">Day 3</span>
-      <p>The <b>Compromise of 1850</b> kept the country together: <b>California</b> became a <b>free</b> state, and <b>New Mexico and Utah</b> would <b>vote</b> (popular sovereignty) on slavery.</p>
-      <p>It included a tougher <b>Fugitive Slave Act</b>, which:</p>
-      <ul>
-        <li><b>Made it easier to re-enslave runaways</b>, even in the free North.</li>
-        <li>Let a Black person be <b>sent South by anyone claiming to be their owner</b> (no jury, no testimony).</li>
-        <li><b>Paid commissioners more money for ruling a person enslaved</b> than free.</li>
-        <li><b>Forced Northerners to help</b> catch runaways — which made many of them furious.</li>
-      </ul>`,
-    flash:[
-      {q:"What did the Compromise of 1850 do with California?", a:"Admitted it as a free state (while New Mexico/Utah would vote)."},
-      {q:"Why did the Fugitive Slave Act anger Northerners?", a:"It forced them to help catch runaways and let Black people be sent South on just a claim of ownership."}
-    ]},
-  { emoji:"🩸", title:"Kansas-Nebraska Act",
-    summary:`<span class="tag">Day 3 &middot; 1854</span>
-      <p>Created the <b>Kansas and Nebraska territories</b> and let them use <b>popular sovereignty</b> to decide on slavery. This <b>cancelled the old Missouri Compromise line</b>, so slavery could spread where it had been banned.</p>
-      <p>Pro- and anti-slavery settlers rushed in and <b>fought violently</b> — known as <b>"Bleeding Kansas."</b> The act also <b>led to the creation of the Republican Party</b>.</p>`,
-    flash:[
-      {q:"What violent event did this act cause?", a:"“Bleeding Kansas” (mass violence between settlers)."},
-      {q:"What new political party formed because of it?", a:"The Republican Party."}
-    ]},
-  { emoji:"👨‍⚖️", title:"Dred Scott v. Sandford",
-    summary:`<span class="tag">Day 3 &middot; 1857</span>
-      <p><b>Dred Scott</b>, an enslaved man, <b>sued for his freedom</b> because he had lived in free territory. <b>Chief Justice Roger Taney</b> ruled against him:</p>
-      <ul>
-        <li><b>Black people were not citizens</b> and <b>couldn't sue</b> in court.</li>
-        <li>Taney said African Americans <b>were "inferior"</b> with no rights.</li>
-        <li>The <b>federal government could not ban slavery</b> in the territories (making the Missouri Compromise unconstitutional).</li>
-      </ul>
-      <p>The decision caused <b>outrage in the North</b> and pushed the country closer to war.</p>`,
-    flash:[
-      {q:"What did Taney say about African Americans?", a:"That they were 'inferior' and not citizens, so they couldn't sue."},
-      {q:"How did the North react?", a:"With outrage."}
-    ]},
-  { emoji:"💥", title:"John Brown's Raid",
-    summary:`<span class="tag">Day 4 &middot; Harpers Ferry, 1859</span>
-      <p><b>John Brown</b> was a <b>radical white abolitionist</b> who believed violence was justified to end slavery. He <b>raided a federal arsenal</b> (weapons storehouse) at <b>Harpers Ferry, Virginia</b>, hoping to <b>arm enslaved people and start a revolt</b>.</p>
-      <p>The raid <b>failed</b> — Brown was <b>captured and executed</b>. The <b>North</b> saw him as a <b>martyr (hero)</b>; the <b>South</b> saw him as a <b>terrorist</b>.</p>`,
-    flash:[
-      {q:"What was John Brown trying to do at Harpers Ferry?", a:"Raid an arsenal to arm enslaved people and start a revolt."},
-      {q:"How did the North view him afterward?", a:"As a martyr (a hero who died for the cause)."}
-    ]},
-  { emoji:"🎯", title:"Fort Sumter & the War's Names",
-    summary:`<span class="tag">Day 4 &middot; 1861</span>
-      <p><b>Fort Sumter</b> was a U.S. fort in <b>Charleston, South Carolina</b>, where the <b>South fired the first shots</b> — this <b>started the Civil War</b>.</p>
-      <p>Names for the war include the <b>Civil War</b>, the <b>War Between the States</b>, and the <b>War of Northern Aggression</b> — but <b>NOT</b> "the War to End Slavery."</p>`,
-    flash:[
-      {q:"What happened at Fort Sumter?", a:"The South fired the first shots, starting the Civil War."},
-      {q:"Which is NOT a name for the war: Civil War, War Between the States, or War to End Slavery?", a:"“War to End Slavery.”"}
-    ]}
-];
+/* ============================ CONTENT ============================ */
 
-const QUIZ = [
-  // --- From the teacher's practice quiz (1/3) ---
-  {q:`Which of the following was NOT a name for the Civil War?`,
-   o:[`War Between the States`,`War of Northern Aggression`,`War to End Slavery`,`Civil War`],c:2,
-   e:`The others were all real names; "War to End Slavery" was not. (From your practice quiz.)`},
-  // --- New ---
-  {q:`An abolitionist is a person who wanted to:`,
-   o:[`expand slavery into new territories`,`end slavery`,`let each state vote on slavery`,`return escaped slaves to their owners`],c:1,
-   e:`To "abolish" means to get rid of — abolitionists worked to end slavery.`},
-  {q:`A territory holds a vote to decide for itself whether to allow slavery. This idea is called:`,
-   o:[`sectionalism`,`states' rights`,`popular sovereignty`,`abolition`],c:2,
-   e:`Popular sovereignty = the people of a territory vote on slavery themselves.`},
-  // --- Teacher ---
-  {q:`What is sectionalism?`,
-   o:[`Focus on the national good`,`Support for all states equally`,`Each region prioritizing its own interest`,`Keeping slavery in only one part of the country`],c:2,
-   e:`Sectionalism is loyalty to your own region (North or South) over the whole nation. (From your practice quiz.)`},
-  // --- New ---
-  {q:`Nat Turner led a violent slave rebellion in which state?`,
-   o:[`Kansas`,`Virginia`,`South Carolina`,`Missouri`],c:1,
-   e:`Nat Turner's 1831 rebellion took place in Virginia.`},
-  {q:`What was one major result of Nat Turner's rebellion?`,
-   o:[`The South freed many enslaved people`,`Southern states passed stricter laws controlling enslaved people`,`Slavery ended in Virginia`,`The North invaded the South`],c:1,
-   e:`A frightened South responded with harsher laws, including bans on teaching enslaved people to read.`},
-  // --- Teacher ---
-  {q:`Angelina Grimké believed slavery:`,
-   o:[`Should not spread to new states`,`Was a sin and un-Christian`,`Was not profitable for the country`,`Was none of women's business`],c:1,
-   e:`She argued on moral and religious grounds that slavery was a sin. (From your practice quiz.)`},
-  // --- New ---
-  {q:`Grimké argued that slavery broke the promise of which founding document — that "all men are created equal"?`,
-   o:[`The Constitution`,`The Bill of Rights`,`The Declaration of Independence`,`The Emancipation Proclamation`],c:2,
-   e:`She quoted the Declaration of Independence's "all men are created equal."`},
-  {q:`Grimké urged Southern women to fight slavery by signing petitions and sending them to:`,
-   o:[`the President`,`their state legislatures`,`newspapers`,`the army`],c:1,
-   e:`She wanted women to petition their legislatures as a moral and religious appeal.`},
-  {q:`William Lloyd Garrison published an influential anti-slavery newspaper called:`,
-   o:[`The North Star`,`The Liberator`,`Uncle Tom's Cabin`,`The Amistad`],c:1,
-   e:`Garrison's paper was The Liberator. (The North Star was Frederick Douglass's paper.)`},
-  {q:`Garrison believed slavery should be ended:`,
-   o:[`gradually, over many years`,`only in new territories`,`immediately`,`only if the South agreed`],c:2,
-   e:`Garrison demanded immediate emancipation.`},
-  // --- Teacher ---
-  {q:`Who taught Frederick Douglass the alphabet?`,
-   o:[`His master`,`His mistress`,`His mother`,`Some white boys`],c:1,
-   e:`His mistress began teaching him before her husband ordered her to stop. (From your practice quiz.)`},
-  {q:`How did Frederick Douglass learn to read and write?`,
-   o:[`Bribing poor white kids with bread`,`He attended a school`,`His master taught him`,`He learned only from books`],c:0,
-   e:`He traded bread to poor white boys in exchange for reading lessons. (From your practice quiz.)`},
-  // --- New ---
-  {q:`After learning to read, Douglass felt miserable and discontented — but he held on to:`,
-   o:[`his trust in his enslavers`,`the hope of freedom`,`a love of farm work`,`his fear of escape`],c:1,
-   e:`Reading showed him how wrong slavery was; only the hope of freedom kept him going.`},
-  {q:`What was the name of the cruel "slave-breaker" Douglass finally fought back against?`,
-   o:[`Master Hugh`,`Mr. Covey`,`Roger Taney`,`John Brown`],c:1,
-   e:`Mr. Covey was the slave-breaker; their fight was a turning point for Douglass.`},
-  {q:`Why didn't Mr. Covey punish Douglass after their fight?`,
-   o:[`Douglass apologized`,`Covey didn't want to ruin his reputation as a slave-breaker`,`The law protected Douglass`,`Covey was too badly hurt`],c:1,
-   e:`Punishing him publicly would admit he couldn't control Douglass, ruining his reputation.`},
-  {q:`Harriet Tubman earned what nickname for leading enslaved people to freedom?`,
-   o:[`The Liberator`,`Moses`,`The Conductor General`,`Old Hickory`],c:1,
-   e:`She was called "Moses" for leading her people out of bondage.`},
-  {q:`What dangerous thing did Harriet Tubman do over and over?`,
-   o:[`Published an abolitionist newspaper`,`Returned to the South many times to free others`,`Spied for the Confederacy`,`Argued cases before the Supreme Court`],c:1,
-   e:`After escaping, she repeatedly risked re-enslavement to guide others north.`},
-  {q:`Which anti-slavery novel by Harriet Beecher Stowe stirred up the nation?`,
-   o:[`The Narrative of Frederick Douglass`,`Uncle Tom's Cabin`,`The Liberator`,`Common Sense`],c:1,
-   e:`Uncle Tom's Cabin dramatized the cruelty of slavery.`},
-  {q:`How did the South react to Uncle Tom's Cabin?`,
-   o:[`They loved it`,`They were infuriated by it`,`They ignored it`,`They banned all novels`],c:1,
-   e:`The book was wildly popular in the North and infuriated the South.`},
-  // --- Teacher ---
-  {q:`The Amistad case involved:`,
-   o:[`A slave rebellion in Virginia`,`A revolt on a Spanish ship`,`A failed escape to Canada`,`A plantation uprising`],c:1,
-   e:`Enslaved Africans revolted aboard the Spanish ship La Amistad. (From your practice quiz.)`},
-  // --- New ---
-  {q:`Which former U.S. president argued for the Amistad captives' freedom before the Supreme Court?`,
-   o:[`Andrew Jackson`,`Martin Van Buren`,`John Quincy Adams`,`Abraham Lincoln`],c:2,
-   e:`Former president John Quincy Adams defended them, and the Court set them free.`},
-  {q:`Under the Compromise of 1850, California entered the Union as a:`,
-   o:[`slave state`,`free state`,`territory with no decision`,`divided state`],c:1,
-   e:`California came in free, while New Mexico and Utah would decide by popular sovereignty.`},
-  // --- Teacher ---
-  {q:`The Fugitive Slave Act:`,
-   o:[`encouraged runaways`,`freed everyone who reached the North`,`made it easier to re-enslave runaways`,`said enslaved people were citizens`],c:2,
-   e:`It made recapturing escaped people far easier, even in free states. (From your practice quiz.)`},
-  {q:`The Kansas-Nebraska Act:`,
-   o:[`strengthened the Missouri Compromise`,`ended voter fraud`,`led to mass violence`,`caused John Brown's execution`],c:2,
-   e:`Settlers fought so violently over slavery it became known as "Bleeding Kansas." (From your practice quiz.)`},
-  {q:`Chief Justice Taney said that African-American people:`,
-   o:[`were protected under the Constitution`,`were inferior and not citizens`,`had legal rights in the North`,`had to stay below the Missouri Compromise line`],c:1,
-   e:`He ruled they were not citizens and so could not even sue in court. (From your practice quiz.)`},
-  // --- New ---
-  {q:`Dred Scott had sued for his freedom because he had once lived in:`,
-   o:[`a free territory`,`Canada`,`England`,`a Spanish colony`],c:0,
-   e:`He argued that living in free territory had made him free — the Court disagreed.`},
-  {q:`John Brown's 1859 raid took place at the federal arsenal in:`,
-   o:[`Fort Sumter`,`Harpers Ferry`,`Gettysburg`,`Charleston`],c:1,
-   e:`He raided Harpers Ferry, Virginia, hoping to arm enslaved people and spark a revolt.`},
-  {q:`The first shots of the Civil War were fired at Fort Sumter, located in which state?`,
-   o:[`Virginia`,`South Carolina`,`Kansas`,`Massachusetts`],c:1,
-   e:`The South fired on Fort Sumter in Charleston, South Carolina, starting the war.`},
-  // --- Teacher ---
-  {q:`What was the Underground Railroad?`,
-   o:[`A series of tunnels built by abolitionists`,`A secret government program`,`A network of secret routes and safe houses enslaved people used to escape`,`A real train line to Canada`],c:2,
-   e:`A secret network of routes, safe houses ("stations") and helpers ("conductors"). (From your practice quiz.)`}
-];
+const SHAPES = {
+  big:      ["Too Big","Claims more than the passage supports."],
+  said:     ["Already Said","Printed in the text, so not an inference."],
+  sounds:   ["Sounds Right","True of the world; unsupported here."],
+  back:     ["Backwards","Reverses what the passage says."],
+  hood:     ["Wrong Neighborhood","Supported &mdash; but elsewhere in the passage."],
+  grain:    ["Grain Mismatch","Right idea, wrong scope: detail vs whole."]
+};
 
-/* ---------------- STATE ---------------- */
-const app = document.getElementById('app');
-let read = {};
-try { read = JSON.parse(localStorage.getItem('cw_read')||'{}'); } catch(e){ read={}; }
-function saveRead(){ try{ localStorage.setItem('cw_read', JSON.stringify(read)); }catch(e){} }
-
-/* ---------------- GAME: gold, rank, territory ---------------- */
-let gold = 0, earned = {};
-try { gold = parseInt(localStorage.getItem('cw_gold'))||0; } catch(e){ gold=0; }
-try { earned = JSON.parse(localStorage.getItem('cw_earned')||'{}'); } catch(e){ earned={}; }
-function saveGame(){ try{ localStorage.setItem('cw_gold', gold); localStorage.setItem('cw_earned', JSON.stringify(earned)); }catch(e){} }
-
-const GENERAL = "Vaughn";
-const TERRITORIES = ["Fort Sumter","Manassas","New Orleans","Nashville","Vicksburg","Gettysburg","Chattanooga","Atlanta","Savannah","Richmond","Appomattox"];
-const PER = 40; // gold needed to liberate each territory
-function captured(){ return Math.min(TERRITORIES.length, Math.floor(gold/PER)); }
-
-const RANKS = [
-  [0,"Recruit","🎖️"],[80,"Private","🪖"],[160,"Corporal","🎗️"],
-  [260,"Sergeant","⭐"],[360,"Captain","🦅"],[440,"General","🌟"]
-];
-function rankFor(g){ let r=RANKS[0]; RANKS.forEach(x=>{ if(g>=x[0]) r=x; }); return r; }
-
-function renderStats(){
-  const r = rankFor(gold);
-  const el = document.getElementById('stats');
-  if(el) el.innerHTML = `<span class="pill gold">🪙 ${gold} gold</span><span class="pill">${r[2]} ${r[1]} ${GENERAL}</span>`;
+const PASSAGES = [
+{
+  id:"seep", title:"The Cold Seep", genre:"Science", target:240,
+  gist:"A 1984 deep-sea discovery showed life can run on chemical energy instead of sunlight, widening where life is thought possible.",
+  paras:[
+   [1,"For most of the twentieth century, biologists held that every food web on Earth began with sunlight. Plants and algae captured it, animals ate the plants, other animals ate those animals, and everything ultimately traced back to photosynthesis. The deep ocean floor, where no light penetrates, was therefore assumed to be nearly barren \u2014 a desert sustained only by the thin drizzle of dead material sinking from the sunlit waters far above."],
+   [9,"That assumption survived until researchers began sending submersibles into the deep. In 1984, a team working in the Gulf of Mexico found something that did not fit. At a depth of more than three thousand feet, in complete darkness, they encountered dense beds of mussels, tube worms in their thousands, and crabs picking among them. There was no light. There was no sunken whale carcass or other obvious food source. There was, however, methane seeping slowly out of the sediment."],
+   [18,"The site came to be called a cold seep, distinguishing it from the scalding hydrothermal vents discovered several years earlier. The mechanism turned out to be similar in principle. Bacteria at the seep consume methane and hydrogen sulfide, extracting energy from chemical bonds rather than from photons. Tube worms house these bacteria inside their own tissues, providing shelter and a supply of raw chemicals; in exchange, the bacteria feed them. Neither partner could survive alone."],
+   [26,"What makes cold seeps particularly striking is their pace. A hydrothermal vent may run hot for a few decades and then shut down, forcing its inhabitants to disperse or die. A cold seep can persist for thousands of years. Some tube worms found at Gulf seeps have been estimated, from their growth rates, to be more than two centuries old \u2014 among the longest-lived animals known."],
+   [32,"The discovery did not overturn the importance of photosynthesis, which still underwrites the overwhelming majority of life on the planet. What it overturned was the assumption of necessity. Sunlight, it turned out, was one solution to the problem of energy rather than the only one. That distinction mattered well beyond marine biology: if life could organize itself around chemistry alone, then the search for it elsewhere need not be restricted to worlds with a convenient star."]
+  ],
+  questions:[
+   {t:"Inference", q:"It can be inferred from the first paragraph that biologists considered the deep ocean floor barren because",
+    o:["submersibles had not yet reached it","they believed food webs required sunlight","methane is toxic to most animals","no one had thought to look for life there"],
+    a:1, e:"Lines 1\u20135 give the reasoning: everything traced to photosynthesis, so no light meant no food.",
+    w:{0:"sounds",2:"sounds",3:"back"}},
+   {t:"Inference", q:"The passage suggests that before 1984, a site with abundant life and no light would most likely have been explained by researchers as",
+    o:["evidence of an undiscovered energy source","the result of material sinking from above","proof that photosynthesis was unnecessary","a hydrothermal vent in disguise"],
+    a:1, e:"Lines 5\u20138 name the only mechanism then available for the deep floor: the drizzle of dead material from the sunlit surface. Faced with life, that is what they would have reached for.",
+    w:{0:"back",2:"back",3:"hood"}},
+   {t:"Inference", q:"It can be inferred that the tube worms and their bacteria could not survive apart because",
+    o:["the bacteria would be eaten by crabs","each supplies something the other cannot obtain alone","the worms cannot digest methane directly","seeps are too cold for either alone"],
+    a:1, e:"Lines 22\u201325: the worms supply shelter and raw chemicals, the bacteria supply food, and the passage states neither survives alone.",
+    w:{0:"sounds",2:"grain",3:"sounds"}},
+   {t:"Vocabulary", q:"As used in line 34, \u201cunderwrites\u201d most nearly means",
+    o:["insures against loss","signs beneath","provides the basis for","writes about"],
+    a:2, e:"Photosynthesis supports the majority of life. The insurance sense is the everyday meaning and the trap \u2014 vocabulary-in-context questions almost always want the secondary sense.",
+    w:{0:"sounds",1:"sounds",3:"sounds"}},
+   {t:"Organization", q:"The author mentions the age of Gulf tube worms (lines 29\u201331) primarily to",
+    o:["illustrate the consequence of a seep's long duration","suggest that deep-sea animals age slowly in general","question earlier estimates of growth rates","contrast tube worms with mussels"],
+    a:0, e:"The paragraph's subject is duration; the worms' age is the evidence for it.",
+    w:{1:"sounds",2:"sounds",3:"grain"}},
+   {t:"Inference", q:"Which statement would the author most likely agree with?",
+    o:["Photosynthesis is less important than once believed.","Chemical energy sources are more common than sunlight.","The conditions life requires are broader than once assumed.","Hydrothermal vents were the more significant discovery."],
+    a:2, e:"The closing lines make exactly this point: sunlight was one solution, not the only one, so the search need not be restricted.",
+    w:{0:"back",1:"big",3:"sounds"}}
+  ]
+},
+{
+  id:"clock", title:"The Inheritance", genre:"Literature", target:240,
+  gist:"A woman who inherited a stopped clock realizes she has grown attached to its silence, has it repaired anyway, and begins to accept it.",
+  paras:[
+   [1,"The clock had belonged to her grandfather, and before that to his, and Nadia had agreed to take it mostly because no one else would. It stood in the hallway of the new apartment now, too tall for the ceiling, its top moulding grazing the plaster. It had not run in eleven years."],
+   [6,"Her mother had been clear about the terms. \u201cYou don't have to keep it,\u201d she said, in the tone of someone laying a trap and expecting you to admire the workmanship. \u201cOnly, if you're going to sell it, do it quickly. Don't let it sit in a hallway for a decade the way I did.\u201d"],
+   [12,"For the first month Nadia did not look at it. She hung her coat on the hook beside it, went into the kitchen, and did not look. The clock had a face of yellowed enamel and two brass weights that hung motionless on their chains like something waiting to be told it could stop."],
+   [17,"In October she found a man in the phone directory who repaired antique movements. He came on a Thursday, opened the case, and stood for a while without touching anything. Then he said the mainspring was sound, the escapement was sound, and the pendulum had simply been hung a quarter-inch off true \u2014 probably during a move, he said, probably years ago. It would take him twenty minutes."],
+   [24,"Nadia found that she did not want him to do it."],
+   [25,"She could not have explained this to anyone, least of all to the repairman, who was already reaching for his case. Eleven years of silence had made the thing hers in a way that eleven years of chiming would not have. Wound and running, it would become her grandfather's clock again, marking his hours in her hallway. Stopped, it was only an object she had agreed to store."],
+   [32,"\u201cTwenty minutes,\u201d the man said again, mistaking her hesitation for doubt about the price."],
+   [34,"\u201cGo ahead,\u201d she said."],
+   [35,"That night she lay awake listening to it. It was louder than she had expected, and slower, and after the first hour she stopped waiting for it and began simply to hear it, the way one hears rain."]
+  ],
+  questions:[
+   {t:"Inference", q:"Nadia's mother's remark about \u201claying a trap\u201d (lines 8\u20139) suggests that her mother",
+    o:["genuinely does not care what Nadia decides","is offering freedom while making her preference obvious","intends to reclaim the clock later","is testing Nadia's knowledge of antiques"],
+    a:1, e:"The words grant permission; the follow-up warning does not. The narrator's aside tells you to read the tone against the words.",
+    w:{0:"back",2:"sounds",3:"sounds"}},
+   {t:"Inference", q:"It can be inferred that Nadia hesitates in line 24 because",
+    o:["she is worried about the cost of the repair","she doubts the repairman's competence","a working clock would restore a presence she has kept at a distance","she has decided to sell the clock after all"],
+    a:2, e:"Lines 26\u201331 give her reasoning: running, it becomes her grandfather's clock again; stopped, it is only an object.",
+    w:{0:"hood",1:"sounds",3:"sounds"}},
+   {t:"Inference", q:"The repairman's diagnosis suggests that the clock's silence was",
+    o:["caused by decades of neglect","the result of a small misalignment rather than real damage","impossible to reverse without new parts","deliberately arranged by her mother"],
+    a:1, e:"Mainspring sound, escapement sound, pendulum a quarter-inch off true. The gap between a tiny cause and an eleven-year effect is the point.",
+    w:{0:"sounds",2:"back",3:"sounds"}},
+   {t:"Vocabulary", q:"As used in line 30, \u201cmarking\u201d most nearly means",
+    o:["staining","grading","noticing","measuring out"],
+    a:3, e:"A clock marks hours by measuring them out. \u201cNoticing\u201d is the more common sense and the trap.",
+    w:{0:"sounds",1:"sounds",2:"sounds"}},
+   {t:"Supporting Idea", q:"According to the passage, Nadia originally took the clock because",
+    o:["she had always admired it","no one else in the family would","her mother insisted","she intended to sell it quickly"],
+    a:1, e:"Stated directly in lines 1\u20133. Note this is a locate-it question, not an inference \u2014 the answer is printed.",
+    w:{0:"sounds",2:"hood",3:"hood"}},
+   {t:"Inference", q:"The final paragraph suggests that Nadia",
+    o:["regrets having the clock repaired","is gradually accepting what she had resisted","plans to sell the clock quickly","has trouble sleeping generally"],
+    a:1, e:"She stops waiting for the sound and begins simply to hear it \u2014 the simile of rain marks something becoming ordinary rather than intrusive.",
+    w:{0:"back",2:"hood",3:"sounds"}}
+  ]
+},
+{
+  id:"ice", title:"What the Ice Remembers", genre:"Science", target:240,
+  gist:"Ice cores hold direct samples of past atmospheres, but precision drops with depth, and they show conditions without showing causes.",
+  paras:[
+   [1,"An ice core is a cylinder of ice drilled vertically out of a glacier or ice sheet. Read from top to bottom, it is a record of every year that snow fell and failed to melt. Each summer's surface partly thaws and refreezes, leaving a faint boundary; each winter's snow packs down above it. Counting those boundaries is not unlike counting tree rings, and for the upper portion of a core it is nearly as straightforward."],
+   [9,"What makes the ice more useful than the tree, however, is what it traps. As snow compresses into ice, it seals off pockets of the air that happened to be present at the time. Those bubbles are samples of the actual atmosphere of a particular year \u2014 not a proxy for it, not an inference about it, but the gas itself. A researcher can crush a section of core in a vacuum chamber and measure directly how much carbon dioxide the air contained when a Bronze Age farmer was breathing it."],
+   [18,"The deeper one drills, the more the record compresses. Ice near the bottom of a two-mile core has been squeezed by the weight of everything above it until a single year occupies less than a millimeter. Annual layers become impossible to count and must be dated by other means \u2014 by matching volcanic ash to known eruptions, or by modelling how the ice has flowed. Precision falls away with depth, and the oldest sections of the longest cores carry uncertainties measured in millennia rather than years."],
+   [27,"This creates an awkward situation. The most valuable part of the record, in the sense of reaching furthest back, is also the least precise. Researchers therefore treat the two portions of a core differently. The upper ice, dated confidently to the year, is used to establish relationships between variables \u2014 how closely temperature tracks carbon dioxide, for instance. The lower ice is used to test whether those relationships held under conditions no human has observed."],
+   [35,"It is worth being clear about what the cores can and cannot settle. They establish what the atmosphere contained and, through the chemistry of the ice itself, roughly how warm it was. They do not, on their own, establish which caused which. That question requires physics the ice cannot supply. The core is a witness with an excellent memory and no opinion about motive."]
+  ],
+  questions:[
+   {t:"Inference", q:"It can be inferred that annual layers become impossible to count at depth because",
+    o:["the ice has melted and refrozen too often","volcanic ash has obscured the boundaries","pressure has compressed the layers too thin to distinguish","the drilling process destroys them"],
+    a:2, e:"Lines 19\u201321: squeezed until a single year occupies less than a millimeter.",
+    w:{0:"sounds",1:"hood",3:"sounds"}},
+   {t:"Inference", q:"The passage implies that a researcher wanting to know the exact year of a past atmospheric change would be best served by",
+    o:["the lower portion of a long core","the upper portion of a core","volcanic ash layers alone","ice-flow modelling"],
+    a:1, e:"Lines 30\u201332 state the upper ice is dated confidently to the year, while the lower carries uncertainties in millennia.",
+    w:{0:"back",2:"grain",3:"grain"}},
+   {t:"Inference", q:"The author's closing image implies that the ice cores",
+    o:["cannot be trusted about temperature","record conditions accurately but do not explain causes","contradict other lines of evidence","are more reliable than researchers admit"],
+    a:1, e:"Restates lines 37\u201339 directly: they show what and how warm, not which caused which.",
+    w:{0:"back",2:"sounds",3:"big"}},
+   {t:"Vocabulary", q:"As used in line 13, \u201cproxy\u201d most nearly means",
+    o:["a person acting for another","an indirect substitute measure","a formal vote","a permanent record"],
+    a:1, e:"The sentence contrasts a proxy with the gas itself, so a proxy is an indirect stand-in. The everyday meaning is the trap again.",
+    w:{0:"sounds",2:"sounds",3:"back"}},
+   {t:"Organization", q:"Which best describes the organization of the passage?",
+    o:["A claim is stated, defended, then withdrawn.","A method is explained, its strength described, then its limits.","Two competing techniques are compared throughout.","A chronological history of a scientific field."],
+    a:1, e:"Method, then what makes it powerful, then where it stops. Nothing is withdrawn \u2014 stating limits is not retracting.",
+    w:{0:"big",2:"grain",3:"sounds"}},
+   {t:"Inference", q:"The comparison to tree rings in the first paragraph serves mainly to",
+    o:["establish that ice cores are less reliable","introduce an unfamiliar method through a familiar one","suggest trees and ice record identical information","criticize an outdated technique"],
+    a:1, e:"Tree rings are the familiar thing used to make the unfamiliar procedure intelligible; the next paragraph then says why ice is better.",
+    w:{0:"back",2:"big",3:"sounds"}}
+  ]
+},
+{
+  id:"understudy", title:"The Understudy", genre:"Literature", target:240,
+  gist:"An understudy who knows the part better than the lead finally gets to go on, and the director's one instruction is aimed at his whole career.",
+  paras:[
+   [1,"Every afternoon for five weeks Julian had stood at the back of the rehearsal hall with the script he was not going to use. He knew the part better than Devereux did. This was not vanity; it was arithmetic. Devereux had learned the lines in the ordinary way, which is to say under pressure and imperfectly, while Julian had learned them the way a person learns a language he expects never to be allowed to speak."],
+   [9,"He had also, without deciding to, learned Devereux. The half-beat Devereux took before the third-act entrance. The way he shortened the vowel in \u201csovereign\u201d when he was tired. Julian could have performed an impression of the man that would have emptied a room with laughter, and never once did he consider doing it. He was not cruel. He was only extremely observant, and observation, unspent, accumulates."],
+   [17,"On the Thursday of the final week, Julian was informed that he would go on Saturday. Devereux had been offered a film and the producers, who had known for eleven days, had elected to tell no one until the schedule made refusal impossible."],
+   [22,"The company received this news with a kind of tactful horror. People touched Julian's shoulder on their way past. The stage manager said \u201cyou'll be marvellous\u201d in the voice one uses at hospitals. Only the director, who had not spoken to Julian directly in five weeks, walked over, looked at him for a moment, and said, \u201cDon't play it the way he played it.\u201d"],
+   [29,"Julian said he wouldn't."],
+   [30,"He was lying, and they both knew it, and the director walked away satisfied \u2014 because the instruction had not really been about Saturday. It had been about the twenty years after Saturday, and it would sit in Julian somewhere and do its work slowly, the way such things do."]
+  ],
+  questions:[
+   {t:"Inference", q:"The narrator's claim that Julian's knowledge was \u201carithmetic\u201d rather than \u201cvanity\u201d (line 4) suggests that",
+    o:["Julian was better educated than Devereux","Julian had counted his rehearsal hours","the difference followed from circumstance rather than talent","Julian was concealing his pride"],
+    a:2, e:"The sentence that follows explains it: Devereux learned under pressure, Julian had unlimited time. The advantage is situational.",
+    w:{0:"sounds",1:"said",3:"back"}},
+   {t:"Inference", q:"It can be inferred that Julian never performed his impression of Devereux because",
+    o:["he was afraid of being dismissed","he did not find it funny","he had no wish to humiliate him","he was saving it for a better occasion"],
+    a:2, e:"Line 15 states it plainly: he was not cruel. Everything else is invented.",
+    w:{0:"sounds",1:"back",3:"sounds"}},
+   {t:"Inference", q:"The producers' eleven-day delay suggests that they",
+    o:["were unaware of the effect on the company","acted deliberately to remove any possibility of refusal","had been misled by Devereux themselves","were trying to protect Julian from worry"],
+    a:1, e:"Lines 19\u201321 say they told no one until the schedule made refusal impossible \u2014 the timing was the instrument.",
+    w:{0:"back",2:"sounds",3:"sounds"}},
+   {t:"Vocabulary", q:"As used in line 16, \u201cunspent\u201d most nearly means",
+    o:["not paid out","not used or released","inexpensive","tireless"],
+    a:1, e:"Observation that is never expressed builds up. The money sense is the trap.",
+    w:{0:"sounds",2:"sounds",3:"sounds"}},
+   {t:"Tone", q:"The stage manager's hospital voice conveys that the company",
+    o:["believed Julian was unwell","expected the performance to go badly","found the theater uncomfortable","resented Devereux's departure"],
+    a:1, e:"The paragraph is the company bracing for a disaster; the hospital voice is how people speak when they expect bad news.",
+    w:{0:"sounds",2:"sounds",3:"hood"}},
+   {t:"Inference", q:"The final paragraph implies that the director",
+    o:["expected Julian to fail on Saturday","was giving advice aimed past the immediate performance","had misjudged Julian's ability","wanted Julian to imitate Devereux exactly"],
+    a:1, e:"Stated in lines 31\u201333: not about Saturday, but about the twenty years after.",
+    w:{0:"sounds",2:"sounds",3:"back"}}
+  ]
 }
-function toast(msg, isTerr){
-  const box = document.getElementById('toasts'); if(!box) return;
-  const d = document.createElement('div');
-  d.className = 'toast'+(isTerr?' terr':'');
-  d.textContent = msg;
-  box.appendChild(d);
-  setTimeout(()=>d.remove(), 2100);
+];
+
+/* --- right-triangle diagram builder ---------------------------------- */
+/* Always drawn with the right angle at the bottom-left. bl / tl / br are the
+   vertex labels (blank for word problems). vertical / horizontal / hyp are the
+   side labels; use "?" for the unknown side and it renders highlighted.      */
+function triSVG(o){
+  const BL=[70,170], TL=[70,55], BR=[290,170];
+  const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
+  const unit=(p,q)=>{const dx=q[0]-p[0],dy=q[1]-p[1],L=Math.hypot(dx,dy);return [dx/L,dy/L];};
+  const acc='#7A4A1F', ink='#1A2B4A';
+  const isQ=t=>String(t).indexOf('?')>=0;
+  const sideCol=t=>isQ(t)?acc:ink;
+  const sideW=t=>isQ(t)?3:2;
+
+  // angle wedge at whichever vertex is marked
+  const V = o.angleAt==='tl' ? TL : BR;
+  const O1 = o.angleAt==='tl' ? BL : BL;
+  const O2 = o.angleAt==='tl' ? BR : TL;
+  const u1=unit(V,O1), u2=unit(V,O2);
+  const R=30;
+  const p1=[V[0]+u1[0]*R, V[1]+u1[1]*R];
+  const p2=[V[0]+u2[0]*R, V[1]+u2[1]*R];
+  let bx=u1[0]+u2[0], by=u1[1]+u2[1];
+  const bl_=Math.hypot(bx,by)||1; bx/=bl_; by/=bl_;
+  const ctrl=[V[0]+bx*R*1.14, V[1]+by*R*1.14];
+  const atxt=[V[0]+bx*58, V[1]+by*58];
+
+  const mV=mid(BL,TL), mH=mid(BL,BR), mHy=mid(TL,BR);
+
+  return `<svg viewBox="0 0 360 215" width="100%" style="max-width:360px;display:block;margin:10px 0"
+    xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif" font-size="15">
+    <line x1="${BL[0]}" y1="${BL[1]}" x2="${TL[0]}" y2="${TL[1]}" stroke="${sideCol(o.vertical)}" stroke-width="${sideW(o.vertical)}"/>
+    <line x1="${BL[0]}" y1="${BL[1]}" x2="${BR[0]}" y2="${BR[1]}" stroke="${sideCol(o.horizontal)}" stroke-width="${sideW(o.horizontal)}"/>
+    <line x1="${TL[0]}" y1="${TL[1]}" x2="${BR[0]}" y2="${BR[1]}" stroke="${sideCol(o.hyp)}" stroke-width="${sideW(o.hyp)}"/>
+    <path d="M ${BL[0]} ${BL[1]-17} L ${BL[0]+17} ${BL[1]-17} L ${BL[0]+17} ${BL[1]}" fill="none" stroke="${ink}" stroke-width="1.4"/>
+    <path d="M ${p1[0]} ${p1[1]} Q ${ctrl[0]} ${ctrl[1]} ${p2[0]} ${p2[1]}" fill="none" stroke="${acc}" stroke-width="1.6"/>
+    <text x="${atxt[0]}" y="${atxt[1]}" fill="${acc}" text-anchor="middle" dominant-baseline="middle">${o.angleText||''}</text>
+    ${o.vertical?`<text x="${mV[0]-10}" y="${mV[1]}" text-anchor="end" dominant-baseline="middle" fill="${sideCol(o.vertical)}">${o.vertical}</text>`:''}
+    ${o.horizontal?`<text x="${mH[0]}" y="${mH[1]+22}" text-anchor="middle" fill="${sideCol(o.horizontal)}">${o.horizontal}</text>`:''}
+    ${o.hyp?`<text x="${mHy[0]+16}" y="${mHy[1]-10}" text-anchor="start" fill="${sideCol(o.hyp)}">${o.hyp}</text>`:''}
+    ${o.bl?`<text x="${BL[0]-12}" y="${BL[1]+18}" text-anchor="middle" font-weight="bold">${o.bl}</text>`:''}
+    ${o.tl?`<text x="${TL[0]-12}" y="${TL[1]-6}" text-anchor="middle" font-weight="bold">${o.tl}</text>`:''}
+    ${o.br?`<text x="${BR[0]+14}" y="${BR[1]+18}" text-anchor="middle" font-weight="bold">${o.br}</text>`:''}
+    ${o.caption?`<text x="180" y="208" text-anchor="middle" font-size="13" fill="#6B6355">${o.caption}</text>`:''}
+  </svg>`;
 }
-function addGold(amt, key, label){
-  if(key){ if(earned[key]) return; earned[key]=true; }
-  const before = captured();
-  gold += amt; saveGame(); renderStats();
-  toast(`+${amt} 🪙 ${label||''}`.trim());
-  const after = captured();
-  for(let k=before;k<after;k++){
-    setTimeout(()=>toast(`🔵 Liberated ${TERRITORIES[k]} for the Union!`, true), 500*(k-before+1));
+
+const MATHSETS = [
+{
+  id:"chain", title:"Multi-Step Symbolic Work", tag:"Algebraic Concepts", target:1080,
+  intro:"Every step here is easy. The <b>sequence</b> is what fails. On the real test you combined the fractions correctly and then stopped one step early &mdash; after three operations there is nothing telling you a fourth remains. <b>Before choosing, ask: is there still a common factor to cancel, or a fraction inside a fraction?</b>",
+  questions:[
+   {q:"Which expression equals (x/y + x/y)(x/z \u2212 y/x) ?",
+    o:["2(x\u00B2 \u2212 yz) / (yz)","(x/y)((x\u00B2 \u2212 yz)/(xz))","(x\u00B2 \u2212 yz) / (yz)","2(x\u00B2 \u2212 yz) / (xyz)"], a:0,
+    e:"First bracket: x/y + x/y = 2x/y. Second: over the common denominator xz, (x\u00B2 \u2212 yz)/(xz). Multiplying gives 2x(x\u00B2\u2212yz)/(xyz), and the x cancels, leaving 2(x\u00B2\u2212yz)/(yz). <b>Choice B is the trap \u2014 correct, but stopped two steps early.</b> Choice D forgets to cancel the x; choice C loses the 2."},
+   {q:"Written as a single fraction, 1/a \u2212 1/b =",
+    o:["(a \u2212 b)/(ab)","(b \u2212 a)/(ab)","1/(a \u2212 b)","(ab)/(b \u2212 a)"], a:1,
+    e:"Over the common denominator ab: b/(ab) \u2212 a/(ab) = (b\u2212a)/(ab). Each numerator picks up the <i>other</i> denominator, so the order flips. Choice A reverses the subtraction."},
+   {q:"Which expression equals (m/n)(n/p \u2212 p/n) ?",
+    o:["m(n\u00B2 \u2212 p\u00B2)/(n\u00B2p)","m(n \u2212 p)/(np)","(mn \u2212 mp)/(np)","m(n\u00B2 \u2212 p\u00B2)/(np)"], a:0,
+    e:"The bracket over np is (n\u00B2 \u2212 p\u00B2)/(np). Times m/n gives m(n\u00B2\u2212p\u00B2)/(n\u00B2p). Choice D drops an n from the denominator; choice B subtracts numerators without finding a common denominator at all."},
+   {q:"If 6xy \u2212 y = 3 \u2212 18x and x \u2260 1/6, what is the value of y ?",
+    o:["\u22123","3","\u22121/3","1/3"], a:0,
+    e:"Collect the y terms as y(6x \u2212 1). The right side factors as \u22123(6x \u2212 1). So y(6x\u22121) = \u22123(6x\u22121), and dividing by the shared binomial gives y = \u22123. <b>Spotting that both sides carry the same (6x\u22121) is the whole problem</b> \u2014 which is also why you were told x \u2260 1/6."},
+   {q:"If 5xy + y = 2 + 10x, what is the value of y ?",
+    o:["2","\u22122","1/2","5"], a:0,
+    e:"y(5x + 1) = 2(5x + 1), so y = 2. Same structure as the previous question: factor both sides, then cancel the common binomial."},
+   {q:"Simplify: ((x\u00B2 \u2212 9)/(x + 2)) \u00D7 ((x + 2)/(x \u2212 3))",
+    o:["x + 3","x \u2212 3","(x + 3)/(x + 2)","x\u00B2 \u2212 9"], a:0,
+    e:"Factor before cancelling: (x\u22123)(x+3)/(x+2) \u00D7 (x+2)/(x\u22123). Both (x+2) and (x\u22123) cancel, leaving x + 3."},
+   {q:"Written as a single fraction, 2/x + 3/y =",
+    o:["5/(xy)","(2y + 3x)/(xy)","(2x + 3y)/(xy)","5/(x + y)"], a:1,
+    e:"Over xy: 2y/(xy) + 3x/(xy). Choice C swaps which numerator gets which denominator; choice A adds tops and bottoms separately."},
+   {q:"If 1/a + 1/b = 1/c, which expression equals c ?",
+    o:["a + b","ab/(a + b)","(a + b)/(ab)","ab"], a:1,
+    e:"The left side is (a + b)/(ab), so 1/c = (a+b)/(ab). Take the reciprocal of both sides: c = ab/(a+b). <b>Choice C is the reciprocal step forgotten</b> \u2014 one operation short, the same shape as question 1."}
+  ]
+},
+{
+  id:"sci", title:"Scientific Notation and Rates", tag:"Number Sense", target:900,
+  intro:"Two habits. <b>Scientific notation:</b> after dividing, check the front number is at least 1 and under 10 &mdash; if it is 0.6, shift to 6.0 and drop the exponent by one. You have missed this same last step twice. <b>Rate conversions:</b> stack the ratios so units cancel and read off what survives; don't reason about multiplying or dividing.",
+  questions:[
+   {q:"(4.2 \u00D7 10\u2075) / (7.0 \u00D7 10\u207B\u00B2) =",
+    o:["6.0 \u00D7 10\u2077","6.0 \u00D7 10\u2076","0.6 \u00D7 10\u2077","6.0 \u00D7 10\u00B3"], a:1,
+    e:"4.2/7.0 = 0.6 and the exponents give 10\u2077, so 0.6 \u00D7 10\u2077 \u2014 which is <b>not</b> scientific notation. Shift one place: 6.0 \u00D7 10\u2076. Choice A is that step skipped, exactly one power of ten too big. This is the miss you made on two different tests."},
+   {q:"(8.1 \u00D7 10\u2074) / (9.0 \u00D7 10\u207B\u2075) =",
+    o:["9.0 \u00D7 10\u2079","9.0 \u00D7 10\u2078","0.9 \u00D7 10\u2079","9.0 \u00D7 10\u207B\u00B9"], a:1,
+    e:"8.1/9.0 = 0.9 and 10\u2074\u207B\u207B\u2075 = 10\u2079, so 0.9 \u00D7 10\u2079 = 9.0 \u00D7 10\u2078."},
+   {q:"(2.4 \u00D7 10\u00B3)(5.0 \u00D7 10\u2074) =",
+    o:["1.2 \u00D7 10\u2077","12 \u00D7 10\u2077","1.2 \u00D7 10\u2078","7.4 \u00D7 10\u2077"], a:2,
+    e:"2.4 \u00D7 5.0 = 12 and 10\u00B3\u207A\u2074 = 10\u2077, giving 12 \u00D7 10\u2077. Here the front number is too <i>big</i>, so it shifts the other way: 1.2 \u00D7 10\u2078. Normalization runs in both directions."},
+   {q:"(1.5 \u00D7 10\u207B\u00B3) / (5.0 \u00D7 10\u00B2) =",
+    o:["3.0 \u00D7 10\u207B\u2076","3.0 \u00D7 10\u207B\u2075","0.3 \u00D7 10\u207B\u2075","3.0 \u00D7 10\u207B\u00B9"], a:0,
+    e:"1.5/5.0 = 0.3 and 10\u207B\u00B3\u207B\u00B2 = 10\u207B\u2075, so 0.3 \u00D7 10\u207B\u2075 = 3.0 \u00D7 10\u207B\u2076. With negative exponents the corrected exponent goes further down, which feels wrong and isn't."},
+   {q:"A tank fills at 4 gallons per minute. Which expression gives the rate in liters per hour? (1 gallon = 3.785 liters)",
+    o:["(4 \u00D7 60) / 3.785","4 \u00D7 60 \u00D7 3.785","(4 \u00D7 3.785) / 60","(60 \u00D7 3.785) / 4"], a:1,
+    e:"Stack them: (4 gal/min)(60 min/hr)(3.785 L/gal). Minutes cancel, gallons cancel, liters per hour survives \u2014 so everything multiplies."},
+   {q:"A car travels 66 feet per second. Which expression gives its speed in miles per hour? (5280 feet = 1 mile)",
+    o:["(66 \u00D7 5280) / 3600","(66 \u00D7 3600) / 5280","66 \u00D7 3600 \u00D7 5280","(3600 \u00D7 5280) / 66"], a:1,
+    e:"(66 ft/sec)(3600 sec/hr)(1 mile/5280 ft). Seconds cancel; feet are on top, so 5280 must be underneath to remove them."},
+   {q:"A pipe drains 15 quarts per minute. Which expression gives the rate in gallons per hour? (4 quarts = 1 gallon)",
+    o:["(15 \u00D7 60) / 4","15 \u00D7 60 \u00D7 4","(15 \u00D7 4) / 60","60 / (15 \u00D7 4)"], a:0,
+    e:"(15 qt/min)(60 min/hr)(1 gal / 4 qt). Quarts are on top, so the 4 goes underneath."},
+   {q:"A printer produces 24 pages per minute. Which expression gives the number of hours needed for 8,640 pages?",
+    o:["8640 / (24 \u00D7 60)","(8640 \u00D7 60) / 24","8640 / 24","(8640 \u00D7 24) / 60"], a:0,
+    e:"Pages divided by pages-per-minute gives minutes; divide again by 60 for hours. <b>Choice C stops at minutes</b> \u2014 one step short, the recurring shape."}
+  ]
+},
+{
+  id:"cbd", title:"Comparisons: Test Before You Answer", tag:"Quantitative Reasoning", target:900,
+  intro:"You have missed five comparison questions across four tests, every one answered in <b>7 to 21 seconds</b> against averages two to four times longer. The pattern is picturing one case, seeing a clean relationship, and committing. <b>Test a second case first \u2014 try 1, a fraction, a negative, and a long thin shape.</b> If two cases disagree the answer is (D); but not all of these are (D), so actually check.",
+  questions:[
+   {q:"A rectangle has an area of 12 cm\u00B2.<br><b>Column A:</b> its perimeter<br><b>Column B:</b> 14 cm",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
+    e:"A 3\u00D74 rectangle has perimeter 14 \u2014 equal. A 2\u00D76 has perimeter 16 \u2014 greater. Two cases disagree, so (D). <b>A fixed area does not fix the shape</b>; long thin rectangles have huge perimeters."},
+   {q:"A triangle has an area of 20 cm\u00B2.<br><b>Column A:</b> its perimeter<br><b>Column B:</b> 20 cm",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
+    e:"Same idea. A triangle with base 400 and height 0.1 still has area 20 and an enormous perimeter. Area never pins down perimeter."},
+   {q:"x is a positive integer.<br><b>Column A:</b> x\u00B2<br><b>Column B:</b> x\u00B3",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
+    e:"If x = 2 then 4 < 8 and B wins. But if x = 1 both are 1 \u2014 equal. <b>Always test x = 1 when a variable is a positive integer.</b> It breaks most of these."},
+   {q:"0 < x < 1.<br><b>Column A:</b> x\u00B2<br><b>Column B:</b> \u221Ax",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
+    e:"Between 0 and 1 the order reverses: x\u00B2 < x < \u221Ax. Try x = 1/4 \u2014 then x\u00B2 = 1/16 against \u221Ax = 1/2. This one <i>is</i> determined, so (D) would be wrong."},
+   {q:"n is a negative number.<br><b>Column A:</b> n\u00B2<br><b>Column B:</b> \u2212n",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
+    e:"n = \u22122 gives 4 against 2, so A. But n = \u22120.5 gives 0.25 against 0.5, so B. \u201CNegative number\u201D includes fractions between \u22121 and 0 \u2014 the case people forget."},
+   {q:"The original price of a headset is $80.<br><b>Column A:</b> the price after a 20% reduction<br><b>Column B:</b> the price after a 10% reduction, then another 10% off the reduced price",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
+    e:"A: 80 \u00D7 0.80 = $64. B: 80 \u00D7 0.90 \u00D7 0.90 = $64.80. <b>Successive percentages never simply add</b> \u2014 the second 10% comes off a smaller number, so two 10% cuts remove less than one 20% cut. Fully determined, not (D)."},
+   {q:"<b>Column A:</b> the perimeter of a square with area 36<br><b>Column B:</b> the circumference of a circle with radius 4",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
+    e:"The square has side 6 and perimeter 24. The circle has circumference 8\u03C0 \u2248 25.1. Both shapes are pinned down by what you were given, so it is determined \u2014 and you need \u03C0 \u2248 3.14, not 3."},
+   {q:"<b>Column A:</b> 20% of 80<br><b>Column B:</b> 80% of 20",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:2,
+    e:"Both equal 16. In general a% of b always equals b% of a, since both are ab/100. Worth recognising on sight."}
+  ]
+},
+{
+  id:"trig", title:"Trigonometry in Expression Form", tag:"Geometry", target:600,
+  intro:"Kept as maintenance \u2014 missed on two separate tests months apart. Two decisions, no arithmetic. <b>Which function?</b> Name the two sides involved: opposite &amp; hypotenuse means sine, adjacent &amp; hypotenuse means cosine, both legs means tangent. <b>Multiply or divide?</b> Divide only when the side you <i>want</i> is the hypotenuse. The unknown side is drawn in brown.",
+  questions:[
+   {q:"In \u25B3DEF the right angle is at F. Side DF = 24 and angle DEF = 58\u00B0. Which expression equals DE?",
+    svg:{bl:"F",tl:"D",br:"E",angleAt:"br",angleText:"58\u00B0",vertical:"24",horizontal:"",hyp:"?"},
+    o:["24 sin 58\u00B0","24 cos 58\u00B0","24 / sin 58\u00B0","24 / cos 58\u00B0"], a:2,
+    e:"DE is the hypotenuse, so we divide. From angle E, side DF is opposite. Opposite + hypotenuse means sine."},
+   {q:"Same triangle. Which expression equals EF?",
+    svg:{bl:"F",tl:"D",br:"E",angleAt:"br",angleText:"58\u00B0",vertical:"24",horizontal:"?",hyp:""},
+    o:["24 tan 58\u00B0","24 / tan 58\u00B0","24 cos 58\u00B0","24 / cos 58\u00B0"], a:1,
+    e:"EF is adjacent to E and DF is opposite E \u2014 two legs, so tangent. We want the adjacent leg, so divide."},
+   {q:"In \u25B3JKL the right angle is at L. Side JK = 26 and angle KJL = 37\u00B0. Which expression equals JL?",
+    svg:{bl:"L",tl:"K",br:"J",angleAt:"br",angleText:"37\u00B0",vertical:"",horizontal:"?",hyp:"26"},
+    o:["26 sin 37\u00B0","26 cos 37\u00B0","26 / sin 37\u00B0","26 / cos 37\u00B0"], a:1,
+    e:"JK is the hypotenuse and is known; JL is adjacent to angle J. Adjacent + hypotenuse means cosine, and we want a leg, so multiply."},
+   {q:"From a lighthouse 90 feet high, the angle of depression to a boat is 31\u00B0. Which expression gives the horizontal distance to the boat?",
+    svg:{angleAt:"br",angleText:"31\u00B0",vertical:"90 ft",horizontal:"?",hyp:"",caption:"the angle at the boat equals the angle of depression"},
+    o:["90 tan 31\u00B0","90 / tan 31\u00B0","90 sin 31\u00B0","90 / sin 31\u00B0"], a:1,
+    e:"No hypotenuse is involved \u2014 a height and a horizontal distance only \u2014 so tangent. The height is opposite and the distance adjacent, so divide."},
+   {q:"A kite string 55 feet long makes a 62\u00B0 angle with the ground. Which expression gives the kite's height?",
+    svg:{angleAt:"br",angleText:"62\u00B0",vertical:"?",horizontal:"",hyp:"55 ft",caption:"string, height and ground"},
+    o:["55 sin 62\u00B0","55 / sin 62\u00B0","55 cos 62\u00B0","55 tan 62\u00B0"], a:0,
+    e:"The string is the hypotenuse and is known; the height is opposite. Sine, and we want a leg, so multiply."}
+  ]
+}
+];
+
+/* ==================== LaTeX EXPORT (all client-side) ==================== */
+/* Builds a .tex file from the miss log and downloads it. Compiles with plain
+   pdflatex \u2014 no packages beyond geometry/xcolor/parskip.                  */
+
+const SUP = {'\u2070':'0','\u00B9':'1','\u00B2':'2','\u00B3':'3','\u2074':'4','\u2075':'5',
+             '\u2076':'6','\u2077':'7','\u2078':'8','\u2079':'9','\u207A':'+','\u207B':'-',
+             '\u207F':'n','\u1D50':'m','\u1D4F':'k','\u1D56':'p','\u146B':'q'};
+
+const UNI = {
+  '\u00D7':'\u0001M\u0001\\times\u0001M\u0001', '\u2212':'\u0001M\u0001-\u0001M\u0001',
+  '\u00F7':'\u0001M\u0001\\div\u0001M\u0001', '\u03C0':'\u0001M\u0001\\pi\u0001M\u0001',
+  '\u2248':'\u0001M\u0001\\approx\u0001M\u0001', '\u2260':'\u0001M\u0001\\neq\u0001M\u0001',
+  '\u2264':'\u0001M\u0001\\leq\u0001M\u0001', '\u2265':'\u0001M\u0001\\geq\u0001M\u0001',
+  '\u00B0':'\\textdegree{}', '\u25B3':'\u0001M\u0001\\triangle\u0001M\u0001',
+  '\u2014':'---', '\u2013':'--', '\u00B7':'\u0001M\u0001\\cdot\u0001M\u0001',
+  '\u2018':"`", '\u2019':"'", '\u201C':"``", '\u201D':"''", '\u2026':'\\ldots{}',
+  '\u00A0':' ', '\u2192':'\u0001M\u0001\\rightarrow\u0001M\u0001',
+  '\u2190':'\u0001M\u0001\\leftarrow\u0001M\u0001'
+};
+
+/* Turn "A / B" into \frac{A}{B}, for the LaTeX export only — the on-screen app
+   keeps the slash. An operand is either a balanced (...) group, whose outer
+   parentheses the fraction bar makes redundant, or a run of non-space
+   characters. "sin 58" and friends are held together, and a trailing full stop
+   is left outside so "1/6." does not become \frac{1}{6.}. Both sides are marked
+   with placeholders here so the escaper still processes their text normally. */
+const FRAC_FN = /^(sin|cos|tan|log|ln)$/i;
+function scanFracs(t, emit){
+  const atom = c => c !== undefined && /[^\s()\/=+<>,;:]/.test(c);
+  let out = '', i = 0;
+  while(i < t.length){
+    if(t[i] !== '/'){ out += t[i++]; continue; }
+
+    // numerator: walk backwards through what has already been emitted
+    let lEnd = out.length;
+    while(lEnd > 0 && out[lEnd-1] === ' ') lEnd--;
+    let lStart, lParen = false;
+    if(lEnd > 0 && out[lEnd-1] === ')'){
+      let d = 0, k = lEnd;
+      while(k > 0){ k--; if(out[k] === ')') d++; else if(out[k] === '('){ d--; if(!d) break; } }
+      if(d !== 0){ out += t[i++]; continue; }
+      lStart = k; lParen = true;
+    } else {
+      let k = lEnd;
+      while(k > 0 && atom(out[k-1])) k--;
+      lStart = k;
+    }
+    let num = out.slice(lStart, lEnd);
+    if(lParen) num = num.slice(1,-1);
+
+    // denominator: walk forwards through the rest of the string
+    let m = i + 1;
+    while(m < t.length && t[m] === ' ') m++;
+    let rStart = m, rEnd, rParen = false;
+    if(t[m] === '('){
+      let d = 0, n = m;
+      for(; n < t.length; n++){
+        if(t[n] === '(') d++;
+        else if(t[n] === ')'){ d--; if(!d){ n++; break; } }
+      }
+      if(d !== 0){ out += t[i++]; continue; }
+      rEnd = n; rParen = true;
+    } else {
+      let n = m;
+      while(n < t.length && atom(t[n])) n++;
+      if(FRAC_FN.test(t.slice(m,n))){            // keep "sin 58" as one operand
+        let p = n;
+        while(p < t.length && t[p] === ' ') p++;
+        while(p < t.length && atom(t[p])) p++;
+        n = p;
+      }
+      rEnd = n;
+    }
+    let den = t.slice(rStart, rEnd);
+    if(rParen) den = den.slice(1,-1);
+    else {
+      const tail = den.match(/[.,;:!?]+$/);
+      if(tail){ den = den.slice(0, -tail[0].length); rEnd -= tail[0].length; }
+    }
+
+    // only numeric-looking pairs become fractions, so "and/or" is left alone
+    if(!num || !den || !(/\d/.test(num) || /\d/.test(den))){ out += t[i++]; continue; }
+    out = out.slice(0, lStart) + emit(num, den);
+    i = rEnd;
   }
-}
-function resetGame(){
-  if(!confirm("Start a new campaign? This clears your gold, rank, and progress.")) return;
-  gold=0; earned={}; read={}; saveGame(); saveRead(); renderStats(); home();
+  return out;
 }
 
-/* ---------------- VIEWS ---------------- */
-function home(){
-  renderStats();
-  const done = Object.keys(read).filter(k=>read[k]).length;
-  const pct = Math.round(done/TOPICS.length*100);
-  const cap = captured(), N = TERRITORIES.length;
-  const goal = PER*N;
-  const vpct = Math.round(Math.min(gold,goal)/goal*100);
-  let terrcells = '';
-  TERRITORIES.forEach((t,k)=>{
-    const won = k < cap;
-    terrcells += `<div class="terr ${won?'won':''}"><span class="tflag">${won?'🔵':'⚪'}</span>${t}</div>`;
-  });
-  let html = `
-    <div class="card campaign">
-      <h3>🇺🇸 General ${GENERAL}'s March to Victory</h3>
-      <p class="sub">Earn gold by studying &amp; quizzing. Every ${PER} gold liberates a territory for the Union!</p>
-      <div class="vbar"><div class="vfill" style="width:${vpct}%"></div><span class="vflag" style="left:${vpct}%">🚩</span></div>
-      <div class="vlabel">${cap} of ${N} territories liberated</div>
-      <div class="terrgrid">${terrcells}</div>
-      ${cap>=N?`<div class="victory">🎉 The Union is restored — you won the war, General ${GENERAL}!</div>`:''}
-    </div>
-    <div class="barlabel">📖 ${done} of ${TOPICS.length} topics studied</div>
-    <div class="bar"><div style="width:${pct}%"></div></div>
-    <div class="card" style="text-align:center">
-      <p style="margin:0 0 10px">Read each topic and answer its 2 flash questions, then take the final quiz to win the war.</p>
-      <button class="btn gold block" onclick="startQuiz()">📝 Take the Final Quiz</button>
-    </div>
-    <h3 style="margin:18px 0 6px;color:var(--navy)">Topics</h3>`;
-  TOPICS.forEach((t,i)=>{
-    html += `<div class="card topiccard" onclick="topic(${i})">
-      <div class="emoji">${t.emoji}</div>
-      <div class="t"><h3>${t.title}</h3><span>Tap to read &amp; check</span></div>
-      <div class="check ${read[i]?'':'todo'}">${read[i]?'✓':'○'}</div>
+/* LaTeX: operands go inside \text so the escaper's own $...$ spans stay
+   legal, which is why amsmath is loaded. Marked with placeholders so the
+   escaper still processes the operand text normally. */
+function markFracs(t){
+  return scanFracs(t, (n,d) =>
+    '\u0001F\u0001' + n + '\u0001D\u0001' + d + '\u0001G\u0001');
+}
+
+/* Screen: a two-line inline block with a rule between. Applied at render
+   time only -- the misslog keeps the raw text, so the LaTeX export is
+   unaffected by what the screen does. */
+function fracHTML(t){
+  return scanFracs(String(t == null ? '' : t), (n,d) =>
+    '<span class="frac"><span class="fnum">' + n + '</span>'
+    + '<span class="fden">' + d + '</span></span>');
+}
+
+function texEscape(str){
+  let t = String(str);
+
+  // 1. decode entities to real characters first
+  t = t.replace(/&mdash;/g,'\u2014').replace(/&ndash;/g,'\u2013')
+       .replace(/&nbsp;/g,' ').replace(/&rarr;/g,'\u2192').replace(/&larr;/g,'\u2190')
+       .replace(/&middot;/g,'\u00B7').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+       .replace(/&amp;/g,'&');
+
+  // 2. HTML tags -> placeholders the escaper will not touch
+  t = t.replace(/<br\s*\/?>/gi, '\u0001BR\u0001')
+       .replace(/<b>/gi,'\u0001BS\u0001').replace(/<\/b>/gi,'\u0001BE\u0001')
+       .replace(/<i>/gi,'\u0001IS\u0001').replace(/<\/i>/gi,'\u0001IE\u0001')
+       .replace(/<sup>/gi,'\u0001SS\u0001').replace(/<\/sup>/gi,'\u0001SE\u0001')
+       .replace(/<[^>]+>/g,'');
+
+  t = markFracs(t);
+
+  // 3. escape LaTeX specials on plain text
+  t = t.replace(/\\/g,'\u0001TB\u0001')
+       .replace(/([&%#_{}$])/g, '\\$1')
+       .replace(/\^/g,'\\textasciicircum{}')
+       .replace(/~/g,'\\textasciitilde{}');
+
+  // 4. superscript runs -> one \textsuperscript{}
+  const supRe = new RegExp('[' + Object.keys(SUP).join('') + ']+', 'g');
+  t = t.replace(supRe, m => '\u0001SS\u0001' + Array.from(m).map(c=>SUP[c]).join('') + '\u0001SE\u0001');
+
+  // 5. maths-y unicode
+  t = t.replace(/\u221A\s*([A-Za-z0-9]+)/g, (m,x)=>'\u0001M\u0001\\sqrt{'+x+'}\u0001M\u0001');
+  t = t.replace(/\u221A/g,'\u0001M\u0001\\surd\u0001M\u0001');
+  Object.keys(UNI).forEach(c=>{ t = t.split(c).join(UNI[c]); });
+
+  // 6. anything still non-ASCII is dropped rather than breaking the build
+  t = t.replace(/[^\x00-\x7F\u0001]/g,'');
+
+  // 7. placeholders -> real LaTeX
+  t = t.replace(/\u0001BR\u0001/g,'\\par ')
+       .replace(/\u0001BS\u0001/g,'{\\bfseries ').replace(/\u0001BE\u0001/g,'}')
+       .replace(/\u0001IS\u0001/g,'{\\itshape ').replace(/\u0001IE\u0001/g,'}')
+       .replace(/\u0001SS\u0001/g,'\\textsuperscript{').replace(/\u0001SE\u0001/g,'}')
+       .replace(/\u0001TB\u0001/g,'\\textbackslash{}')
+       .replace(/\u0001M\u0001/g,'$')
+       .replace(/\u0001F\u0001/g,'$\\frac{\\text{')
+       .replace(/\u0001D\u0001/g,'}}{\\text{')
+       .replace(/\u0001G\u0001/g,'}}$');
+  return t;
+}
+
+function buildTex(){
+  const log = load('misslog', []);
+  const d = new Date();
+  const date = d.toLocaleDateString('en-GB',{day:'numeric', month:'long', year:'numeric'});
+
+  const bySet = {};
+  log.forEach(e=>{ (bySet[e.setTitle] = bySet[e.setTitle] || []).push(e); });
+
+  let out = [];
+  out.push('\\documentclass[11pt]{article}');
+  out.push('\\usepackage[margin=0.9in]{geometry}');
+  out.push('\\usepackage{amsmath}\\usepackage{xcolor}\\usepackage{parskip}');
+  out.push('\\definecolor{ink}{HTML}{1A2B4A}\\definecolor{bad}{HTML}{A32B2B}\\definecolor{good}{HTML}{1E7A4A}\\definecolor{acc}{HTML}{7A4A1F}');
+  out.push('\\newcommand{\\lab}[1]{{\\footnotesize\\textsc{\\textcolor{acc}{#1}}}\\quad}');
+  out.push('\\begin{document}');
+  out.push('\\begin{center}{\\Large\\bfseries\\textcolor{ink}{ISEE Review Sheet}}\\\\[2pt]{\\small ' + texEscape(date) + '}\\end{center}');
+  out.push('\\hrule\\vspace{10pt}');
+
+  if(log.length === 0){
+    out.push('Nothing logged yet.');
+  } else {
+    out.push('{\\small ' + log.length + ' question' + (log.length===1?'':'s') + ' missed. For each one, read the explanation, then write in your own words what you would do differently.}\\vspace{6pt}');
+    Object.keys(bySet).forEach(setTitle=>{
+      out.push('\\par\\vspace{12pt}\\noindent{\\large\\bfseries\\textcolor{ink}{' + texEscape(setTitle) + '}}\\par');
+      out.push('\\vspace{2pt}\\hrule\\vspace{8pt}');
+      bySet[setTitle].forEach(e=>{
+        out.push('\\noindent{\\bfseries ' + texEscape(e.question) + '}\\par\\vspace{3pt}');
+        if(e.gist) out.push('\\noindent\\lab{Your gist}\\textit{' + texEscape(e.gist) + '}\\par');
+        out.push('\\noindent\\lab{You chose}\\textcolor{bad}{' + texEscape(e.chosen) + '}\\par');
+        out.push('\\noindent\\lab{Answer}\\textcolor{good}{' + texEscape(e.correct) + '}\\par');
+        if(e.shape) out.push('\\noindent\\lab{Failure shape}' + texEscape(e.shape) + '\\par');
+        if(e.type)  out.push('\\noindent\\lab{Type}' + texEscape(e.type) + '\\par');
+        out.push('\\vspace{3pt}\\noindent\\fbox{\\parbox{0.96\\textwidth}{\\small ' + texEscape(e.explanation) + '}}\\par');
+        out.push('\\vspace{4pt}\\noindent\\lab{What I would do differently}\\rule{0.55\\textwidth}{0.4pt}\\par');
+        out.push('\\vspace{12pt}');
+      });
+    });
+  }
+  out.push('\\end{document}');
+  return out.join('\n');
+}
+
+window.downloadTex = function(){
+  const blob = new Blob([buildTex()], {type:'application/x-tex'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = 'isee-review-' + stamp + '.tex';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+};
+
+/* ==================== MISS LOG / TEST MODE / REPORT ==================== */
+
+function logMisses(entries){
+  const log = load('misslog', []);
+  entries.forEach(e=>log.push(e));
+  // keep the most recent 200 so storage never fills
+  save('misslog', log.slice(-200));
+}
+
+let TESTMODE = false;
+let TESTQUEUE = [];
+let TESTSTART = 0;
+
+window.startFullTest = function(kind){
+  TESTMODE = true;
+  TESTSTART = Date.now();
+  save('misslog', []);            // a fresh session starts a fresh report
+  TESTQUEUE = (kind === 'math')
+    ? MATHSETS.map(m=>({type:'math', id:m.id}))
+    : PASSAGES.map(p=>({type:'passage', id:p.id})).concat(MATHSETS.map(m=>({type:'math', id:m.id})));
+  nextInTest();
+};
+
+function nextInTest(){
+  if(TESTQUEUE.length === 0){ TESTMODE = false; go('report'); return; }
+  const item = TESTQUEUE.shift();
+  window.scrollTo(0,0);
+  if(item.type === 'passage') passageView(item.id); else mathView(item.id);
+}
+
+function reportView(){
+  stopTimer();
+  const log = load('misslog', []);
+  const bySet = {};
+  log.forEach(e=>{ (bySet[e.setTitle] = bySet[e.setTitle] || []).push(e); });
+
+  const totalMissed = log.length;
+  const totalAsked  = log.length ? log[0].sessionTotal || 0 : 0;
+
+  let h = `<div class="bar noprint">
+      <button onclick="go('home')">&larr; Back</button>
+      <button class="primary" onclick="window.print()">Print / Save as PDF</button>
+      <button onclick="downloadTex()">Download .tex</button>
+      <button onclick="emailReport()">Email results</button>
+      <button onclick="clearReport()">Clear</button>
     </div>`;
-  });
-  html += `<span class="resetlink" onclick="resetGame()">↺ Start a new campaign (reset progress)</span>`;
-  app.innerHTML = html; window.scrollTo(0,0);
-}
 
-// PAGE 1: read the terms only
-function topic(i){
-  const t = TOPICS[i];
-  let html = `<div class="card summary"><h2>${t.emoji} ${t.title}</h2>${t.summary}</div>
-    <p style="text-align:center;color:#718096;font-size:14px;margin:14px 0 0">Read it through — then test yourself with the page closed. 👇</p>
-    <div class="navrow">
-      <button class="btn ghost" onclick="home()">← All topics</button>
-      <button class="btn gold" onclick="check(${i})">✋ Quick Check →</button>
-    </div>`;
-  app.innerHTML = html; window.scrollTo(0,0);
-  addGold(10, 'read'+i, 'Studied a topic!');
-}
-
-// PAGE 2: the flash questions, WITHOUT the summary visible
-function check(i){
-  const t = TOPICS[i];
-  let html = `<div class="card summary"><span class="tag">Quick Check</span>
-      <h2 style="margin-top:4px">${t.emoji} ${t.title}</h2>
-      <p style="color:#718096;font-size:14px;margin:0">Type your answer from memory, then tap to check.</p></div>`;
-  t.flash.forEach((f,j)=>{
-    html += `<div class="flash">
-      <div class="qlabel">Flash ${j+1}</div>
-      <div class="q">${f.q}</div>
-      <input class="flashin" type="text" placeholder="Type your answer…" autocomplete="off">
-      <button class="reveal" onclick="revealAns(this)">Show answer</button>
-      <div class="ans">✓ ${f.a}</div>
-    </div>`;
-  });
-  html += `<div class="navrow">
-      <button class="btn ghost" onclick="topic(${i})">← Re-read</button>`;
-  if(i < TOPICS.length-1)
-    html += `<button class="btn primary" onclick="markRead(${i});topic(${i+1})">Next topic →</button>`;
-  else
-    html += `<button class="btn gold" onclick="markRead(${i});home()">Done ✓</button>`;
-  html += `</div>`;
-  app.innerHTML = html; window.scrollTo(0,0);
-  markRead(i);
-}
-function markRead(i){ read[i]=true; saveRead(); }
-
-function revealAns(btn){
-  const card = btn.closest('.flash');
-  card.querySelector('.flashin').setAttribute('readonly','');
-  card.querySelector('.ans').classList.add('show');
-  btn.style.display='none';
-}
-
-/* ---------- QUIZ ---------- */
-let qi=0, answers=[], QZ=[];
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
-function buildActiveQuiz(){
-  QZ = QUIZ.map(item=>{
-    const opts = item.o.map((text,idx)=>({text, correct: idx===item.c}));
-    shuffle(opts);
-    return { q:item.q, o:opts.map(o=>o.text), c:opts.findIndex(o=>o.correct), e:item.e };
-  });
-  shuffle(QZ);
-}
-function startQuiz(){ qi=0; answers=[]; buildActiveQuiz(); question(); }
-function question(){
-  const item = QZ[qi];
-  let html = `<div class="card">
-    <div class="qcount">Question ${qi+1} of ${QZ.length}</div>
-    <div class="bar"><div style="width:${Math.round(qi/QZ.length*100)}%"></div></div>
-    <div class="qtext">${item.q}</div>`;
-  item.o.forEach((opt,k)=>{
-    html += `<button class="opt" onclick="answer(${k})">${opt}</button>`;
-  });
-  html += `<div class="explain"></div>
-    <button class="btn primary block hidden" id="nextbtn" onclick="next()">${qi<QZ.length-1?'Next →':'See my score 🎉'}</button>
-    <button class="btn ghost block" style="margin-top:14px" onclick="home()">Quit to topics</button>
+  h += `<div class="rpt-head">
+    <h2 style="margin:0">Review sheet</h2>
+    <div class="meta">Generated ${new Date().toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long', year:'numeric'})}</div>
   </div>`;
-  app.innerHTML = html; window.scrollTo(0,0);
-}
-function answer(k){
-  const item = QZ[qi];
-  if(answers[qi]!==undefined) return;
-  answers[qi]=k;
-  const opts = app.querySelectorAll('.opt');
-  opts.forEach((b,idx)=>{
-    b.classList.add('disabled'); b.onclick=null;
-    if(idx===item.c) b.classList.add('correct');
-    if(idx===k && k!==item.c) b.classList.add('wrong');
+
+  if(totalMissed === 0){
+    h += `<div class="card"><p>Nothing logged yet. Work through a set, or run a full session from the home screen, and every question you miss lands here.</p></div>`;
+    app.innerHTML = h; return;
+  }
+
+  // score strip
+  const scores = load('scores',{});
+  h += `<div class="scorebar">`;
+  Object.keys(bySet).forEach(k=>{
+    const rows = bySet[k], last = rows[rows.length-1];
+    const bits = [];
+    if(last.setScore)      bits.push(last.setScore + ' correct');
+    if(last.setTime != null) bits.push(fmt(last.setTime));
+    if(last.inference)     bits.push('inference ' + last.inference);
+    h += `<div>${k}<b>${rows.length} missed</b>` +
+         (bits.length ? `<span class="meta">${bits.join(' &middot; ')}</span>` : '') +
+         `</div>`;
   });
-  const ex = app.querySelector('.explain');
-  ex.innerHTML = (k===item.c?'✅ <b>Correct!</b> ':'❌ <b>Not quite.</b> ')+item.e;
-  ex.classList.add('show');
-  if(k===item.c) addGold(10, 'quiz'+qi, 'Correct!');
-  app.querySelector('#nextbtn').classList.remove('hidden');
+  h += `</div>`;
+
+  h += `<p class="note noprint" style="margin-bottom:2px">On iPhone: <b>Print / Save as PDF</b>, then the share icon, then Mail &mdash; the PDF goes as an attachment. <b>Email results</b> sends the scores and the list of misses as plain text. <button class="linkish" onclick="changeMail()">Change email address</button></p>`;
+  h += `<p class="note">One card per question missed. The explanation is on each card &mdash; read it, then say out loud what you would do differently. That sentence is the part that sticks.</p>`;
+
+  Object.keys(bySet).forEach(setTitle=>{
+    h += `<div class="rpt-sec">${setTitle}</div>`;
+    bySet[setTitle].forEach(e=>{
+      h += `<div class="rpt-item">
+        <div class="rpt-q">${fracHTML(e.question)}</div>
+        ${e.gist ? `<div class="rpt-row"><span class="lab">Your gist</span><i>${e.gist}</i></div>` : ''}
+        <div class="rpt-row"><span class="lab">You chose</span><span class="rpt-wrong">${fracHTML(e.chosen)}</span></div>
+        <div class="rpt-row"><span class="lab">Answer</span><span class="rpt-right">${fracHTML(e.correct)}</span></div>
+        ${e.shape ? `<div class="rpt-row"><span class="lab">Failure shape</span>${e.shape}</div>` : ''}
+        ${e.type ? `<div class="rpt-row"><span class="lab">Question type</span>${e.type}</div>` : ''}
+        <div class="rpt-note">${fracHTML(e.explanation)}</div>
+        <div class="rpt-row" style="margin-top:9px"><span class="lab">What I'd do differently</span>
+          <span style="display:inline-block;border-bottom:1px solid var(--line);min-width:58%">&nbsp;</span></div>
+      </div>`;
+    });
+  });
+
+  app.innerHTML = h;
 }
-function next(){ if(qi<QZ.length-1){qi++;question();} else results(); }
-function results(){
-  let score=0; answers.forEach((a,i)=>{ if(a===QZ[i].c) score++; });
-  if(score===QZ.length) addGold(100, 'perfect', 'PERFECT QUIZ BONUS!');
-  const pct = Math.round(score/QZ.length*100);
-  let msg, color;
-  if(pct>=90){msg="Amazing! You're test-ready! 🏆";color="var(--green)";}
-  else if(pct>=75){msg="Great job — almost there! 💪";color="var(--green)";}
-  else if(pct>=60){msg="Good start — review the misses below. 📖";color="var(--gold)";}
-  else{msg="Keep studying — you've got this! Review below. 📚";color="var(--red)";}
-  let html = `<div class="card scorebox">
-      <div class="big" style="color:${color}">${score}/${QZ.length}</div>
-      <div class="msg">${msg}</div>
-      <button class="btn gold" onclick="startQuiz()">↻ Retake quiz</button>
-      <button class="btn ghost block" onclick="home()">Back to topics</button>
+
+/* Results by email. The address is kept in localStorage rather than in the
+   source, so this public repo does not publish one; it is asked for once per
+   device. The body is a scoreboard plus the misses -- no explanations, which
+   are what push a mailto: URL past what some clients will accept. */
+function plainText(html){
+  const d = document.createElement('div');
+  d.innerHTML = String(html == null ? '' : html);
+  return (d.textContent || '').replace(/\s+/g, ' ').trim();
+}
+function recipient(force){
+  let to = load('mailto', '');
+  if(force || !to){
+    to = (prompt('Email results to which address?', to || '') || '').trim();
+    if(!to) return '';
+    save('mailto', to);
+  }
+  return to;
+}
+window.changeMail = function(){ if(recipient(true)) emailReport(); };
+
+window.emailReport = function(){
+  const log = load('misslog', []);
+  if(!log.length){ alert('Nothing logged yet \u2014 work through a set first.'); return; }
+  const to = recipient(false);
+  if(!to) return;
+
+  const bySet = {};
+  log.forEach(e => { (bySet[e.setTitle] = bySet[e.setTitle] || []).push(e); });
+
+  const when = new Date().toLocaleDateString(undefined,
+    {day:'numeric', month:'long', year:'numeric'});
+  const L = ['ISEE practice \u2014 ' + when, ''];
+
+  Object.keys(bySet).forEach(k => {
+    const rows = bySet[k], last = rows[rows.length-1], bits = [];
+    if(last.setScore)        bits.push(last.setScore + ' correct');
+    if(last.setTime != null) bits.push(fmt(last.setTime));
+    if(last.inference)       bits.push('inference ' + last.inference);
+    bits.push(rows.length + ' missed');
+    L.push(k + ' \u2014 ' + bits.join(', '));
+  });
+
+  Object.keys(bySet).forEach(k => {
+    L.push('', k + ':');
+    bySet[k].forEach(e => {
+      const q = plainText(e.question);
+      L.push('', '  ' + (q.length > 90 ? q.slice(0,90) + '\u2026' : q),
+                 '      chose:   ' + plainText(e.chosen),
+                 '      correct: ' + plainText(e.correct));
+    });
+  });
+  L.push('', 'Explanations and diagrams are in the PDF.');
+
+  let body = L.join('\n');
+  if(body.length > 4000) body = body.slice(0,4000) + '\n\n[\u2026truncated \u2014 see the PDF]';
+  location.href = 'mailto:' + encodeURIComponent(to)
+    + '?subject=' + encodeURIComponent('ISEE practice \u2014 ' + when
+        + ' \u2014 ' + log.length + ' missed')
+    + '&body=' + encodeURIComponent(body);
+};
+
+window.clearReport = function(){ save('misslog', []); go('report'); };
+
+/* ============================ STATE ============================ */
+const app = document.getElementById('app');
+let view = {name:'home'};
+let timerId = null, elapsed = 0;
+
+function save(k,v){ try{ localStorage.setItem('isee:'+k, JSON.stringify(v)); }catch(e){} }
+function load(k,d){ try{ const v=localStorage.getItem('isee:'+k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+
+function fmt(s){ const m=Math.floor(s/60), r=s%60; return m+":"+String(r).padStart(2,"0"); }
+
+function startTimer(target){
+  elapsed=0; clearInterval(timerId);
+  timerId=setInterval(()=>{ elapsed++; const el=document.getElementById('timer');
+    if(el){ el.textContent=fmt(elapsed); el.className='timer'+(elapsed>target?' over':''); } },1000);
+}
+function stopTimer(){ clearInterval(timerId); timerId=null; }
+
+/* ============================ VIEWS ============================ */
+
+function home(){
+  stopTimer();
+  const scores = load('scores',{});
+  const nMiss = load('misslog',[]).length;
+  let h = `<h2>Run a full session</h2>
+    <div class="card">
+      <p class="meta" style="margin:0 0 10px">No answers shown until the end. Every question missed goes onto a review sheet you can print.</p>
+      <button class="primary" onclick="startFullTest('math')">Math only &mdash; 29 questions</button>
+      <button onclick="startFullTest('all')" style="margin-left:8px">Everything &mdash; 4 passages + 29 questions</button>
     </div>
-    <div class="card review"><h4>Review your answers</h4>`;
-  QZ.forEach((item,i)=>{
-    const a=answers[i], ok=a===item.c;
-    html += `<div class="ritem ${ok?'ok':'no'}">
-      <span class="icon">${ok?'✅':'❌'}</span>${item.q}<br>
-      <b>Answer:</b> ${item.o[item.c]}${!ok?`<br><span style="color:var(--red)">You chose: ${item.o[a]}</span>`:''}
-      <br><span style="color:#4a5568">${item.e}</span>
-    </div>`;
+    <div class="card">
+      <h3 style="margin:0 0 4px">Review sheet</h3>
+      <div class="meta">${nMiss? nMiss+' question'+(nMiss===1?'':'s')+' logged' : 'nothing logged yet'}</div>
+      <button class="primary" style="margin-top:10px" onclick="go('report')">Open &amp; print</button>
+    </div>
+    <p class="note">Read the passage, write the one-sentence gist, then answer. The gist is the whole point &mdash; when it is vague, the inference questions are the ones that fall.</p><h2>Reading</h2>`;
+  PASSAGES.forEach(p=>{
+    const s = scores[p.id];
+    const inf = p.questions.filter(q=>q.t==="Inference").length;
+    h += `<div class="card"><h3>${p.title}</h3>
+      <div class="meta"><span class="tag">${p.genre}</span>${p.questions.length} questions &middot; ${inf} inference &middot; target ${fmt(p.target)}</div>
+      <p class="meta" style="margin:8px 0">${s? 'Last score: <b>'+s.c+' / '+s.t+'</b> in '+fmt(s.time) : '&nbsp;'}</p>
+      <button class="primary" onclick="go('passage','${p.id}')">${s?'Try again':'Start'}</button></div>`;
   });
-  html += `</div>`;
-  app.innerHTML = html; window.scrollTo(0,0);
+  h += `<h2>Math</h2>`;
+  MATHSETS.forEach(m=>{
+    const ms = scores[m.id];
+    h += `<div class="card"><h3>${m.title}</h3>
+      <div class="meta"><span class="tag">${m.tag}</span>${m.questions.length} questions</div>
+      <p class="meta" style="margin:8px 0">${ms? 'Last score: <b>'+ms.c+' / '+ms.t+'</b>' : '&nbsp;'}</p>
+      <button class="primary" onclick="go('math','${m.id}')">${ms?'Try again':'Start'}</button></div>`;
+  });
+  h += `<p class="note" style="margin-top:26px">Read the explanation on every one you miss, not just the score.</p>`;
+  app.innerHTML = h;
 }
+
+function passageView(id){
+  const p = PASSAGES.find(x=>x.id===id);
+  let h = `<div class="bar"><button onclick="go('home')">&larr; Back</button>
+     <span>Target ${fmt(p.target)}</span><span class="timer" id="timer">0:00</span></div>
+     <h2>${p.title}</h2><div class="meta" style="margin-bottom:10px"><span class="tag">${p.genre}</span></div>
+     <div class="passage">`;
+  p.paras.forEach(([n,t])=>{ h += `<p><span class="ln">${n}</span>${t}</p>`; });
+  h += `</div>
+    <div class="gist"><b>Before you look at a single question:</b><br>
+    In one sentence, what is this passage about? If you cannot write it, reread.
+    <textarea id="gistbox" placeholder="This passage is about..."></textarea>
+    <button class="primary" style="margin-top:8px" onclick="unlock('${p.id}')">Lock it in &amp; show questions</button>
+    <div id="gistwarn" class="note"></div></div>
+    <div id="questions" class="hide"></div>`;
+  app.innerHTML = h;
+  startTimer(p.target);
+}
+
+window.unlock = function(id){
+  const g = document.getElementById('gistbox').value.trim();
+  if(g.split(/\s+/).filter(Boolean).length < 5){
+    document.getElementById('gistwarn').innerHTML = 'Write a real sentence first &mdash; at least five words. This step is the practice.';
+    return;
+  }
+  const p = PASSAGES.find(x=>x.id===id);
+  let h = '<div class="card">';
+  p.questions.forEach((q,i)=>{
+    h += `<div class="q" id="q${i}"><div class="qtext">${i+1}. ${fracHTML(q.q)}</div>
+      <div class="meta" style="margin-bottom:6px"><span class="tag">${q.t}</span></div>`;
+    q.o.forEach((o,j)=>{
+      h += `<label class="opt" id="o${i}_${j}"><input type="radio" name="q${i}" value="${j}">${fracHTML(o)}</label>`;
+    });
+    h += `<div class="exp hide" id="e${i}"></div></div>`;
+  });
+  h += `<button class="primary" style="margin-top:14px" onclick="grade('${id}')">Submit answers</button></div>`;
+  const box = document.getElementById('questions');
+  box.innerHTML = h; box.classList.remove('hide');
+  box.scrollIntoView({behavior:'smooth'});
+};
+
+window.grade = function(id){
+  stopTimer();
+  const p = PASSAGES.find(x=>x.id===id);
+  let c = 0;
+  p.questions.forEach((q,i)=>{
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const pick = sel ? +sel.value : -1;
+    if(pick === q.a) c++;
+    document.getElementById(`o${i}_${q.a}`).classList.add('correct');
+    if(pick !== -1 && pick !== q.a) document.getElementById(`o${i}_${pick}`).classList.add('chosen-wrong');
+    const e = document.getElementById(`e${i}`);
+    let shape = '';
+    if(pick !== -1 && pick !== q.a && q.w && q.w[pick]){
+      const s = SHAPES[q.w[pick]];
+      shape = `<span class="shape">${s[0]}</span> ${s[1]}<br><br>`;
+    }
+    if(!TESTMODE){ e.innerHTML = shape + fracHTML(q.e); e.classList.remove('hide'); }
+    document.querySelectorAll(`input[name="q${i}"]`).forEach(r=>r.disabled=true);
+
+  });
+  const infTot = p.questions.filter(q=>q.t==="Inference").length;
+  let infC = 0;
+  p.questions.forEach((q,i)=>{ if(q.t==="Inference"){ const s=document.querySelector(`input[name="q${i}"]:checked`); if(s && +s.value===q.a) infC++; } });
+
+  const scores = load('scores',{}); scores[id]={c:c,t:p.questions.length,time:elapsed}; save('scores',scores);
+  const yours = document.getElementById('gistbox').value.trim();
+
+  const missed = [];
+  p.questions.forEach((q,i)=>{
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const pick = sel ? +sel.value : -1;
+    if(pick === q.a) return;
+    missed.push({
+      setTitle: p.title + ' (' + p.genre + ')',
+      question: (i+1) + '. ' + q.q,
+      chosen: pick === -1 ? 'left blank' : q.o[pick],
+      correct: q.o[q.a],
+      explanation: q.e,
+      type: q.t,
+      shape: (pick !== -1 && q.w && q.w[pick]) ? SHAPES[q.w[pick]][0] + ' \u2014 ' + SHAPES[q.w[pick]][1] : '',
+      setScore: c + ' / ' + p.questions.length,
+      setTime: elapsed,
+      inference: infC + ' / ' + infTot,
+      gist: yours,
+      sessionTotal: p.questions.length
+    });
+  });
+  logMisses(missed);
+
+  if(TESTMODE){ nextInTest(); return; }
+
+  const banner = document.createElement('div');
+  banner.className='card';
+  banner.innerHTML = `<div class="score">${c} / ${p.questions.length}</div>
+    <div class="meta">Inference: <b>${infC} / ${infTot}</b> &middot; Time ${fmt(elapsed)} (target ${fmt(p.target)})</div>
+    <div style="margin-top:14px"><b>Your gist:</b><br><i>${yours.replace(/</g,'&lt;')}</i></div>
+    <div style="margin-top:10px"><b>A good gist:</b><br><i>${p.gist}</i></div>
+    <div class="exp" style="margin-top:14px">${c < p.questions.length-1
+      ? 'Compare the two sentences above. When a passage goes badly, the gist is almost always the thing that was vague &mdash; and inference questions are the first to fall, because they are the only ones you cannot answer by looking something up.'
+      : 'Well done. Notice how much of that came from having the passage clear before the first question.'}</div>
+    <button class="primary" style="margin-top:14px" onclick="go('home')">Back to list</button>`;
+  document.getElementById('questions').prepend(banner);
+  banner.scrollIntoView({behavior:'smooth'});
+};
+
+function mathView(id){
+  const m = MATHSETS.find(x=>x.id===id);
+  window.__MSET = m;
+  let h = `<div class="bar"><button onclick="go('home')">&larr; Back</button><span class="timer" id="timer">0:00</span></div>
+    <h2>${m.title}</h2><div class="exp">${fracHTML(m.intro)}</div><div class="card">`;
+  m.questions.forEach((q,i)=>{
+    h += `<div class="q"><div class="qtext">${i+1}. ${fracHTML(q.q)}</div>`;
+    if(q.svg) h += triSVG(q.svg);
+    q.o.forEach((o,j)=>{ h += `<label class="opt" id="mo${i}_${j}"><input type="radio" name="m${i}" value="${j}">${fracHTML(o)}</label>`; });
+    h += `<div class="exp hide" id="me${i}"></div></div>`;
+  });
+  h += `<button class="primary" style="margin-top:14px" onclick="gradeMath()">Submit answers</button></div>`;
+  app.innerHTML = h;
+  startTimer(m.target);
+}
+
+window.gradeMath = function(){
+  stopTimer();
+  const M = window.__MSET;
+  let c=0;
+  M.questions.forEach((q,i)=>{
+    const sel = document.querySelector(`input[name="m${i}"]:checked`);
+    const pick = sel? +sel.value : -1;
+    if(pick===q.a) c++;
+    document.getElementById(`mo${i}_${q.a}`).classList.add('correct');
+    if(pick!==-1 && pick!==q.a) document.getElementById(`mo${i}_${pick}`).classList.add('chosen-wrong');
+    const e=document.getElementById(`me${i}`);
+    if(!TESTMODE){ e.innerHTML=fracHTML(q.e); e.classList.remove('hide'); }
+    document.querySelectorAll(`input[name="m${i}"]`).forEach(r=>r.disabled=true);
+  });
+  const scores=load('scores',{}); scores[M.id]={c:c,t:M.questions.length,time:elapsed}; save('scores',scores);
+
+  const missedM=[];
+  M.questions.forEach((q,i)=>{
+    const sel=document.querySelector(`input[name="m${i}"]:checked`);
+    const pick=sel? +sel.value : -1;
+    if(pick===q.a) return;
+    missedM.push({
+      setTitle: M.title,
+      question: (i+1)+'. '+q.q,
+      chosen: pick===-1 ? 'left blank' : q.o[pick],
+      correct: q.o[q.a],
+      explanation: q.e,
+      type: M.tag,
+      shape: '',
+      setScore: c + ' / ' + M.questions.length,
+      setTime: elapsed,
+      sessionTotal: M.questions.length
+    });
+  });
+  logMisses(missedM);
+  if(TESTMODE){ nextInTest(); return; }
+  const b=document.createElement('div'); b.className='card';
+  const TIPS = {
+    chain:'On any you missed, check whether your answer was actually <i>wrong</i> or just <i>unfinished</i>. Stopping one step early is the thing to watch for.',
+    sci:  'On any you missed, check whether the front number ended between 1 and 10 \u2014 and on the rate questions, whether the units actually cancelled.',
+    cbd:  'On any you missed, ask how many cases you tested before answering. One is never enough.',
+    trig: 'On any you missed, check which of the two decisions failed: naming the sides, or multiply-versus-divide. It is almost always the second.'
+  };
+  const tip = TIPS[M.id] || 'Read the explanation on every one you missed.';
+  b.innerHTML=`<div class="score">${c} / ${M.questions.length}</div>
+    <div class="meta">Time ${fmt(elapsed)}</div>
+    <div class="exp" style="margin-top:12px">${tip}</div>
+    <button class="primary" style="margin-top:12px" onclick="go('home')">Back to list</button>`;
+  app.querySelector('.card').prepend(b);
+  b.scrollIntoView({behavior:'smooth'});
+};
+
+window.go = function(name, id){
+  window.scrollTo(0,0);
+  if(name==='home') home();
+  else if(name==='passage') passageView(id);
+  else if(name==='math') mathView(id);
+  else if(name==='report') reportView();
+};
 
 home();
 </script>
