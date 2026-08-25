@@ -317,124 +317,380 @@ function triSVG(o){
   </svg>`;
 }
 
+/* --- solid diagrams: cone, cylinder, sphere, prism -------------------- */
+/* o = {solid:'cone'|'cylinder'|'sphere'|'prism', r, h, l, w, caption}
+   Any label may be "?" and renders highlighted in the accent colour.     */
+function solidSVG(o){
+  const acc='#7A4A1F', ink='#1A2B4A', soft='#F3F0EA';
+  const isQ=t=>String(t).indexOf('?')>=0;
+  const col=t=>isQ(t)?acc:ink;
+  const W=(t)=>isQ(t)?2.4:1.6;
+  const T=(x,y,t,anchor)=>t?`<text x="${x}" y="${y}" text-anchor="${anchor||'middle'}" fill="${col(t)}" font-size="14">${t}</text>`:'';
+  const cap=o.caption?`<text x="175" y="207" text-anchor="middle" font-size="12" fill="#6B6355">${o.caption}</text>`:'';
+  let g='';
+
+  if(o.solid==='cone'){
+    g=`<ellipse cx="130" cy="160" rx="70" ry="20" fill="${soft}" stroke="${ink}" stroke-width="1.6"/>
+       <path d="M 60 160 L 130 40 L 200 160" fill="none" stroke="${ink}" stroke-width="1.6"/>
+       <line x1="130" y1="40" x2="130" y2="160" stroke="${col(o.h)}" stroke-width="${W(o.h)}" stroke-dasharray="4 3"/>
+       <line x1="130" y1="160" x2="200" y2="160" stroke="${col(o.r)}" stroke-width="${W(o.r)}"/>
+       ${T(118,105,o.h,'end')}${T(168,193,o.r)}`;
+  } else if(o.solid==='cylinder'){
+    g=`<ellipse cx="130" cy="55" rx="62" ry="18" fill="${soft}" stroke="${ink}" stroke-width="1.6"/>
+       <path d="M 68 55 L 68 158" stroke="${ink}" stroke-width="1.6" fill="none"/>
+       <path d="M 192 55 L 192 158" stroke="${ink}" stroke-width="1.6" fill="none"/>
+       <path d="M 68 158 A 62 18 0 0 0 192 158" fill="none" stroke="${ink}" stroke-width="1.6"/>
+       <line x1="205" y1="55" x2="205" y2="158" stroke="${col(o.h)}" stroke-width="${W(o.h)}"/>
+       <line x1="130" y1="55" x2="192" y2="55" stroke="${col(o.r)}" stroke-width="${W(o.r)}"/>
+       ${T(219,112,o.h,'start')}${T(161,48,o.r)}`;
+  } else if(o.solid==='sphere'){
+    g=`<circle cx="130" cy="105" r="65" fill="${soft}" stroke="${ink}" stroke-width="1.6"/>
+       <ellipse cx="130" cy="105" rx="65" ry="18" fill="none" stroke="${ink}" stroke-width="1" stroke-dasharray="4 3"/>
+       <line x1="130" y1="105" x2="195" y2="105" stroke="${col(o.r)}" stroke-width="${W(o.r)}"/>
+       <circle cx="130" cy="105" r="2.5" fill="${ink}"/>
+       ${T(163,98,o.r)}`;
+  } else { /* prism */
+    g=`<path d="M 60 70 L 170 70 L 170 155 L 60 155 Z" fill="${soft}" stroke="${ink}" stroke-width="1.6"/>
+       <path d="M 60 70 L 95 45 L 205 45 L 170 70" fill="none" stroke="${ink}" stroke-width="1.6"/>
+       <path d="M 170 70 L 205 45 L 205 130 L 170 155" fill="none" stroke="${ink}" stroke-width="1.6"/>
+       <line x1="60" y1="166" x2="170" y2="166" stroke="${col(o.l)}" stroke-width="${W(o.l)}"/>
+       <line x1="182" y1="155" x2="217" y2="130" stroke="${col(o.w)}" stroke-width="${W(o.w)}"/>
+       <line x1="48" y1="70" x2="48" y2="155" stroke="${col(o.h)}" stroke-width="${W(o.h)}"/>
+       ${T(115,182,o.l)}${T(212,158,o.w,'start')}${T(38,116,o.h,'end')}`;
+  }
+  return `<svg viewBox="0 0 350 215" width="100%" style="max-width:350px;display:block;margin:10px 0"
+    xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">${g}${cap}</svg>`;
+}
+
+/* --- plane-figure diagrams -------------------------------------------- */
+/* o = {fig:'circleInSquare'|'squareInCircle'|'ring'|'sector'|'transversal',
+        a,b,c, caption}  Labels containing "?" render in the accent colour. */
+function figSVG(o){
+  const acc='#7A4A1F', ink='#1A2B4A', soft='#F3F0EA', shade='#E4DED2';
+  const isQ=t=>String(t).indexOf('?')>=0;
+  const col=t=>isQ(t)?acc:ink;
+  const T=(x,y,t,an)=>t?`<text x="${x}" y="${y}" text-anchor="${an||'middle'}" fill="${col(t)}" font-size="14">${t}</text>`:'';
+  const cap=o.caption?`<text x="175" y="207" text-anchor="middle" font-size="12" fill="#6B6355">${o.caption}</text>`:'';
+  let g='';
+
+  if(o.fig==='circleInSquare'){
+    g=`<rect x="65" y="30" width="150" height="150" fill="${shade}" stroke="${ink}" stroke-width="1.6"/>
+       <circle cx="140" cy="105" r="75" fill="#fff" stroke="${ink}" stroke-width="1.6"/>
+       <line x1="228" y1="30" x2="228" y2="180" stroke="${col(o.a)}" stroke-width="${isQ(o.a)?2.4:1.6}"/>
+       ${T(238,110,o.a,'start')}`;
+  } else if(o.fig==='squareInCircle'){
+    g=`<circle cx="140" cy="105" r="78" fill="${shade}" stroke="${ink}" stroke-width="1.6"/>
+       <rect x="85" y="50" width="110" height="110" fill="#fff" stroke="${ink}" stroke-width="1.6"/>
+       <line x1="140" y1="105" x2="218" y2="105" stroke="${col(o.a)}" stroke-width="${isQ(o.a)?2.4:1.6}"/>
+       <circle cx="140" cy="105" r="2.5" fill="${ink}"/>
+       ${T(180,99,o.a)}`;
+  } else if(o.fig==='ring'){
+    g=`<circle cx="140" cy="105" r="80" fill="${shade}" stroke="${ink}" stroke-width="1.6"/>
+       <circle cx="140" cy="105" r="34" fill="#fff" stroke="${ink}" stroke-width="1.6"/>
+       <line x1="140" y1="105" x2="174" y2="105" stroke="${col(o.a)}" stroke-width="1.8"/>
+       <line x1="140" y1="105" x2="140" y2="25" stroke="${col(o.b)}" stroke-width="1.8"/>
+       <circle cx="140" cy="105" r="2.5" fill="${ink}"/>
+       ${T(157,99,o.a)}${T(150,66,o.b,'start')}`;
+  } else if(o.fig==='sector'){
+    const deg=o.deg||60, R=80, cx=130, cy=120;
+    const rad=deg*Math.PI/180;
+    const x2=cx+R*Math.cos(-rad), y2=cy+R*Math.sin(-rad);
+    const large=deg>180?1:0;
+    g=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="#fff" stroke="${ink}" stroke-width="1.4"/>
+       <path d="M ${cx} ${cy} L ${cx+R} ${cy} A ${R} ${R} 0 ${large} 0 ${x2.toFixed(1)} ${y2.toFixed(1)} Z"
+         fill="${shade}" stroke="${ink}" stroke-width="1.8"/>
+       <line x1="${cx}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="${col(o.a)}" stroke-width="1.8"/>
+       ${T(cx+R/2,cy+18,o.a)}
+       <text x="${cx+20}" y="${cy-22}" fill="${acc}" font-size="13">${o.angleText||(deg+'\u00B0')}</text>`;
+  } else { /* transversal */
+    g=`<line x1="30" y1="70" x2="250" y2="70" stroke="${ink}" stroke-width="1.6"/>
+       <line x1="30" y1="145" x2="250" y2="145" stroke="${ink}" stroke-width="1.6"/>
+       <line x1="70" y1="185" x2="215" y2="30" stroke="${ink}" stroke-width="1.6"/>
+       <text x="255" y="74" font-size="12" fill="#6B6355">m</text>
+       <text x="255" y="149" font-size="12" fill="#6B6355">n</text>
+       ${T(188,62,o.a,'start')}`;
+  }
+  return `<svg viewBox="0 0 350 215" width="100%" style="max-width:350px;display:block;margin:10px 0"
+    xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">${g}${cap}</svg>`;
+}
+
 const MATHSETS = [
 {
   id:"chain", title:"Multi-Step Symbolic Work", tag:"Algebraic Concepts", target:1080,
-  intro:"Every step here is easy. The <b>sequence</b> is what fails. On the real test you combined the fractions correctly and then stopped one step early &mdash; after three operations there is nothing telling you a fourth remains. <b>Before choosing, ask: is there still a common factor to cancel, or a fraction inside a fraction?</b>",
+  intro:"Every individual step is easy. The <b>sequence</b> is what fails. On the real test you combined the fractions correctly and then stopped one step early \u2014 after three operations there is nothing telling you a fourth remains. <b>Before choosing, ask: is there still a common factor to cancel, or a fraction sitting inside a fraction?</b>",
   questions:[
-   {q:"Which expression equals (x/y + x/y)(x/z \u2212 y/x) ?",
-    o:["2(x\u00B2 \u2212 yz) / (yz)","(x/y)((x\u00B2 \u2212 yz)/(xz))","(x\u00B2 \u2212 yz) / (yz)","2(x\u00B2 \u2212 yz) / (xyz)"], a:0,
-    e:"First bracket: x/y + x/y = 2x/y. Second: over the common denominator xz, (x\u00B2 \u2212 yz)/(xz). Multiplying gives 2x(x\u00B2\u2212yz)/(xyz), and the x cancels, leaving 2(x\u00B2\u2212yz)/(yz). <b>Choice B is the trap \u2014 correct, but stopped two steps early.</b> Choice D forgets to cancel the x; choice C loses the 2."},
-   {q:"Written as a single fraction, 1/a \u2212 1/b =",
-    o:["(a \u2212 b)/(ab)","(b \u2212 a)/(ab)","1/(a \u2212 b)","(ab)/(b \u2212 a)"], a:1,
-    e:"Over the common denominator ab: b/(ab) \u2212 a/(ab) = (b\u2212a)/(ab). Each numerator picks up the <i>other</i> denominator, so the order flips. Choice A reverses the subtraction."},
-   {q:"Which expression equals (m/n)(n/p \u2212 p/n) ?",
-    o:["m(n\u00B2 \u2212 p\u00B2)/(n\u00B2p)","m(n \u2212 p)/(np)","(mn \u2212 mp)/(np)","m(n\u00B2 \u2212 p\u00B2)/(np)"], a:0,
-    e:"The bracket over np is (n\u00B2 \u2212 p\u00B2)/(np). Times m/n gives m(n\u00B2\u2212p\u00B2)/(n\u00B2p). Choice D drops an n from the denominator; choice B subtracts numerators without finding a common denominator at all."},
-   {q:"If 6xy \u2212 y = 3 \u2212 18x and x \u2260 1/6, what is the value of y ?",
-    o:["\u22123","3","\u22121/3","1/3"], a:0,
-    e:"Collect the y terms as y(6x \u2212 1). The right side factors as \u22123(6x \u2212 1). So y(6x\u22121) = \u22123(6x\u22121), and dividing by the shared binomial gives y = \u22123. <b>Spotting that both sides carry the same (6x\u22121) is the whole problem</b> \u2014 which is also why you were told x \u2260 1/6."},
-   {q:"If 5xy + y = 2 + 10x, what is the value of y ?",
-    o:["2","\u22122","1/2","5"], a:0,
-    e:"y(5x + 1) = 2(5x + 1), so y = 2. Same structure as the previous question: factor both sides, then cancel the common binomial."},
-   {q:"Simplify: ((x\u00B2 \u2212 9)/(x + 2)) \u00D7 ((x + 2)/(x \u2212 3))",
-    o:["x + 3","x \u2212 3","(x + 3)/(x + 2)","x\u00B2 \u2212 9"], a:0,
-    e:"Factor before cancelling: (x\u22123)(x+3)/(x+2) \u00D7 (x+2)/(x\u22123). Both (x+2) and (x\u22123) cancel, leaving x + 3."},
-   {q:"Written as a single fraction, 2/x + 3/y =",
-    o:["5/(xy)","(2y + 3x)/(xy)","(2x + 3y)/(xy)","5/(x + y)"], a:1,
-    e:"Over xy: 2y/(xy) + 3x/(xy). Choice C swaps which numerator gets which denominator; choice A adds tops and bottoms separately."},
-   {q:"If 1/a + 1/b = 1/c, which expression equals c ?",
-    o:["a + b","ab/(a + b)","(a + b)/(ab)","ab"], a:1,
-    e:"The left side is (a + b)/(ab), so 1/c = (a+b)/(ab). Take the reciprocal of both sides: c = ab/(a+b). <b>Choice C is the reciprocal step forgotten</b> \u2014 one operation short, the same shape as question 1."}
+   {q:"Which expression equals (p/q + p/q)(p/r \u2212 q/p) ?",
+    o:["2(p\u00B2 \u2212 qr) / (qr)","(p/q)((p\u00B2 \u2212 qr)/(pr))","(p\u00B2 \u2212 qr) / (qr)","2(p\u00B2 \u2212 qr) / (pqr)"], a:0,
+    e:"First bracket: p/q + p/q = 2p/q. Second: over the common denominator pr, (p\u00B2 \u2212 qr)/(pr). Multiplying gives 2p(p\u00B2\u2212qr)/(pqr), and the p cancels, leaving 2(p\u00B2\u2212qr)/(qr). <b>Choice B is the trap \u2014 right, but stopped two steps early.</b> Choice D forgets to cancel the p; C loses the 2."},
+   {q:"Written as a single fraction, 3/a \u2212 2/b =",
+    o:["1/(ab)","(3b \u2212 2a)/(ab)","(3a \u2212 2b)/(ab)","(3 \u2212 2)/(a \u2212 b)"], a:1,
+    e:"Over the common denominator ab: 3b/(ab) \u2212 2a/(ab). Each numerator picks up the <i>other</i> denominator. Choice C swaps them; A subtracts numerators and denominators separately."},
+   {q:"Which expression equals (r/s)(s/t + t/s) ?",
+    o:["r(s\u00B2 + t\u00B2)/(s\u00B2t)","r(s + t)/(st)","(rs + rt)/(st)","r(s\u00B2 + t\u00B2)/(st)"], a:0,
+    e:"The bracket over st is (s\u00B2 + t\u00B2)/(st). Times r/s gives r(s\u00B2+t\u00B2)/(s\u00B2t). Choice D drops an s from the denominator; B adds the numerators with no common denominator at all."},
+   {q:"If 8xy + y = 4 + 32x, what is the value of y ?",
+    o:["4","\u22124","1/4","8"], a:0,
+    e:"Collect the y terms: y(8x + 1). The right side factors as 4(8x + 1). So y(8x+1) = 4(8x+1) and y = 4. <b>Spotting that both sides carry the same binomial is the whole problem.</b>"},
+   {q:"If 3xy \u2212 y = 5 \u2212 15x and x \u2260 1/3, what is the value of y ?",
+    o:["\u22125","5","\u22121/5","15"], a:0,
+    e:"y(3x \u2212 1) on the left; the right side is \u22125(3x \u2212 1). Dividing by the shared binomial gives y = \u22125. The sign is the trap \u2014 pulling out +5 instead of \u22125 gives choice B."},
+   {q:"Simplify: ((x\u00B2 \u2212 25)/(x \u2212 1)) \u00D7 ((x \u2212 1)/(x + 5))",
+    o:["x \u2212 5","x + 5","(x \u2212 5)/(x \u2212 1)","x\u00B2 \u2212 25"], a:0,
+    e:"Factor before cancelling: (x\u22125)(x+5)/(x\u22121) \u00D7 (x\u22121)/(x+5). The (x\u22121) and the (x+5) both cancel, leaving x \u2212 5."},
+   {q:"Which expression equals (a/b) \u00F7 (c/d) ?",
+    o:["ac/(bd)","ad/(bc)","bc/(ad)","(a + d)/(b + c)"], a:1,
+    e:"Dividing by a fraction means multiplying by its reciprocal: (a/b)(d/c) = ad/(bc). Choice A multiplies straight across without flipping; C flips the wrong one."},
+   {q:"If 1/p \u2212 1/q = 1/r, which expression equals r ?",
+    o:["q \u2212 p","pq/(q \u2212 p)","(q \u2212 p)/(pq)","pq"], a:1,
+    e:"The left side is (q \u2212 p)/(pq), so 1/r = (q\u2212p)/(pq). Take the reciprocal of both sides: r = pq/(q\u2212p). <b>Choice C is the reciprocal step forgotten</b> \u2014 one operation short, the same shape as question 1."}
   ]
 },
 {
   id:"sci", title:"Scientific Notation and Rates", tag:"Number Sense", target:900,
-  intro:"Two habits. <b>Scientific notation:</b> after dividing, check the front number is at least 1 and under 10 &mdash; if it is 0.6, shift to 6.0 and drop the exponent by one. You have missed this same last step twice. <b>Rate conversions:</b> stack the ratios so units cancel and read off what survives; don't reason about multiplying or dividing.",
+  intro:"Two habits. <b>Scientific notation:</b> after dividing, check the front number is at least 1 and under 10 \u2014 if it is 0.6, shift to 6.0 and drop the exponent by one. You have missed this exact last step on two separate tests. <b>Rate conversions:</b> stack the ratios so the units cancel and read off what survives; don't reason about whether to multiply or divide.",
   questions:[
-   {q:"(4.2 \u00D7 10\u2075) / (7.0 \u00D7 10\u207B\u00B2) =",
-    o:["6.0 \u00D7 10\u2077","6.0 \u00D7 10\u2076","0.6 \u00D7 10\u2077","6.0 \u00D7 10\u00B3"], a:1,
-    e:"4.2/7.0 = 0.6 and the exponents give 10\u2077, so 0.6 \u00D7 10\u2077 \u2014 which is <b>not</b> scientific notation. Shift one place: 6.0 \u00D7 10\u2076. Choice A is that step skipped, exactly one power of ten too big. This is the miss you made on two different tests."},
-   {q:"(8.1 \u00D7 10\u2074) / (9.0 \u00D7 10\u207B\u2075) =",
-    o:["9.0 \u00D7 10\u2079","9.0 \u00D7 10\u2078","0.9 \u00D7 10\u2079","9.0 \u00D7 10\u207B\u00B9"], a:1,
-    e:"8.1/9.0 = 0.9 and 10\u2074\u207B\u207B\u2075 = 10\u2079, so 0.9 \u00D7 10\u2079 = 9.0 \u00D7 10\u2078."},
-   {q:"(2.4 \u00D7 10\u00B3)(5.0 \u00D7 10\u2074) =",
-    o:["1.2 \u00D7 10\u2077","12 \u00D7 10\u2077","1.2 \u00D7 10\u2078","7.4 \u00D7 10\u2077"], a:2,
-    e:"2.4 \u00D7 5.0 = 12 and 10\u00B3\u207A\u2074 = 10\u2077, giving 12 \u00D7 10\u2077. Here the front number is too <i>big</i>, so it shifts the other way: 1.2 \u00D7 10\u2078. Normalization runs in both directions."},
-   {q:"(1.5 \u00D7 10\u207B\u00B3) / (5.0 \u00D7 10\u00B2) =",
-    o:["3.0 \u00D7 10\u207B\u2076","3.0 \u00D7 10\u207B\u2075","0.3 \u00D7 10\u207B\u2075","3.0 \u00D7 10\u207B\u00B9"], a:0,
-    e:"1.5/5.0 = 0.3 and 10\u207B\u00B3\u207B\u00B2 = 10\u207B\u2075, so 0.3 \u00D7 10\u207B\u2075 = 3.0 \u00D7 10\u207B\u2076. With negative exponents the corrected exponent goes further down, which feels wrong and isn't."},
-   {q:"A tank fills at 4 gallons per minute. Which expression gives the rate in liters per hour? (1 gallon = 3.785 liters)",
-    o:["(4 \u00D7 60) / 3.785","4 \u00D7 60 \u00D7 3.785","(4 \u00D7 3.785) / 60","(60 \u00D7 3.785) / 4"], a:1,
-    e:"Stack them: (4 gal/min)(60 min/hr)(3.785 L/gal). Minutes cancel, gallons cancel, liters per hour survives \u2014 so everything multiplies."},
-   {q:"A car travels 66 feet per second. Which expression gives its speed in miles per hour? (5280 feet = 1 mile)",
-    o:["(66 \u00D7 5280) / 3600","(66 \u00D7 3600) / 5280","66 \u00D7 3600 \u00D7 5280","(3600 \u00D7 5280) / 66"], a:1,
-    e:"(66 ft/sec)(3600 sec/hr)(1 mile/5280 ft). Seconds cancel; feet are on top, so 5280 must be underneath to remove them."},
-   {q:"A pipe drains 15 quarts per minute. Which expression gives the rate in gallons per hour? (4 quarts = 1 gallon)",
-    o:["(15 \u00D7 60) / 4","15 \u00D7 60 \u00D7 4","(15 \u00D7 4) / 60","60 / (15 \u00D7 4)"], a:0,
-    e:"(15 qt/min)(60 min/hr)(1 gal / 4 qt). Quarts are on top, so the 4 goes underneath."},
-   {q:"A printer produces 24 pages per minute. Which expression gives the number of hours needed for 8,640 pages?",
-    o:["8640 / (24 \u00D7 60)","(8640 \u00D7 60) / 24","8640 / 24","(8640 \u00D7 24) / 60"], a:0,
-    e:"Pages divided by pages-per-minute gives minutes; divide again by 60 for hours. <b>Choice C stops at minutes</b> \u2014 one step short, the recurring shape."}
+   {q:"(5.4 \u00D7 10\u2076) / (9.0 \u00D7 10\u207B\u00B3) =",
+    o:["6.0 \u00D7 10\u2079","6.0 \u00D7 10\u2078","0.6 \u00D7 10\u2079","6.0 \u00D7 10\u00B3"], a:1,
+    e:"5.4/9.0 = 0.6 and the exponents give 10\u2079, so 0.6 \u00D7 10\u2079 \u2014 which is <b>not</b> scientific notation. Shift one place: 6.0 \u00D7 10\u2078. Choice A is that step skipped, exactly one power of ten too big. This is the miss you made twice."},
+   {q:"(6.3 \u00D7 10\u207B\u00B2) / (9.0 \u00D7 10\u00B3) =",
+    o:["7.0 \u00D7 10\u207B\u2076","7.0 \u00D7 10\u207B\u2075","0.7 \u00D7 10\u207B\u2075","7.0 \u00D7 10\u207B\u00B9"], a:0,
+    e:"6.3/9.0 = 0.7 and 10\u207B\u00B2\u207B\u00B3 = 10\u207B\u2075, so 0.7 \u00D7 10\u207B\u2075 = 7.0 \u00D7 10\u207B\u2076. With negative exponents the corrected exponent goes further down, which feels wrong and isn't."},
+   {q:"(3.5 \u00D7 10\u2074)(4.0 \u00D7 10\u00B3) =",
+    o:["1.4 \u00D7 10\u2077","14 \u00D7 10\u2077","1.4 \u00D7 10\u2078","7.5 \u00D7 10\u2077"], a:2,
+    e:"3.5 \u00D7 4.0 = 14 and 10\u2074\u207A\u00B3 = 10\u2077, giving 14 \u00D7 10\u2077. Here the front number is too <i>big</i>, so it shifts the other way: 1.4 \u00D7 10\u2078. Normalization runs in both directions."},
+   {q:"(2.7 \u00D7 10\u2075) / (3.0 \u00D7 10\u207B\u2074) =",
+    o:["9.0 \u00D7 10\u2079","9.0 \u00D7 10\u2078","0.9 \u00D7 10\u2079","9.0 \u00D7 10\u00B9"], a:1,
+    e:"2.7/3.0 = 0.9 and 10\u2075\u207B\u207B\u2074 = 10\u2079, so 0.9 \u00D7 10\u2079 = 9.0 \u00D7 10\u2078."},
+   {q:"A pump moves 7 liters per second. Which expression gives the rate in gallons per hour? (1 gallon = 3.785 liters)",
+    o:["(7 \u00D7 3600) / 3.785","7 \u00D7 3600 \u00D7 3.785","(7 \u00D7 3.785) / 3600","3600 / (7 \u00D7 3.785)"], a:0,
+    e:"(7 L/sec)(3600 sec/hr)(1 gal / 3.785 L). Seconds cancel; litres are on top, so 3.785 goes underneath to remove them."},
+   {q:"A car travels 45 miles per hour. Which expression gives its speed in feet per second? (5280 feet = 1 mile)",
+    o:["(45 \u00D7 3600) / 5280","(45 \u00D7 5280) / 3600","45 \u00D7 5280 \u00D7 3600","5280 / (45 \u00D7 3600)"], a:1,
+    e:"(45 mi/hr)(5280 ft/mi)(1 hr/3600 sec). Miles cancel and hours cancel. Note this is the reverse of the usual direction \u2014 read which unit you are asked for."},
+   {q:"A machine produces 18 parts per minute. Which expression gives the number of hours needed for 6,480 parts?",
+    o:["6480 / (18 \u00D7 60)","(6480 \u00D7 60) / 18","6480 / 18","(6480 \u00D7 18) / 60"], a:0,
+    e:"Parts divided by parts-per-minute gives minutes; divide again by 60 for hours. <b>Choice C stops at minutes</b> \u2014 one step short, the recurring shape."},
+   {q:"A tap leaks 3 ounces per minute. Which expression gives the number of gallons lost in one day? (128 ounces = 1 gallon)",
+    o:["(3 \u00D7 60 \u00D7 24) / 128","(3 \u00D7 60) / 128","3 \u00D7 60 \u00D7 24 \u00D7 128","(3 \u00D7 24) / 128"], a:0,
+    e:"(3 oz/min)(60 min/hr)(24 hr/day)(1 gal/128 oz). Three conversions chained; ounces are on top, so 128 goes underneath. Choice B stops after one hour."}
+  ]
+},
+{
+  id:"twopart", title:"Two-Part Algebra", tag:"Algebraic Concepts", target:900,
+  intro:"Each of these needs <b>two moves, in order</b>. Usually the first is a factoring or collecting step that makes the second one trivial \u2014 and the whole difficulty is seeing that the first move exists. <b>If a question looks like it needs values you weren't given, look for an identity instead.</b> The three worth knowing cold: x\u00B2 \u2212 y\u00B2 = (x\u2212y)(x+y), (x+y)\u00B2 = x\u00B2 + 2xy + y\u00B2, and (x\u2212y)\u00B2 = x\u00B2 \u2212 2xy + y\u00B2.",
+  questions:[
+   {q:"If x\u00B2 \u2212 y\u00B2 = 60 and x + y = 12, what is x \u2212 y ?",
+    o:["5","48","72","6"], a:0,
+    e:"x\u00B2 \u2212 y\u00B2 factors as (x\u2212y)(x+y), so 60 = (x\u2212y)(12) and x \u2212 y = 5. <b>You are never meant to find x and y separately</b> \u2014 that is the trap this question is built on."},
+   {q:"If a + b = 9 and ab = 20, what is a\u00B2 + b\u00B2 ?",
+    o:["41","61","81","121"], a:0,
+    e:"(a+b)\u00B2 = a\u00B2 + 2ab + b\u00B2 = 81. Subtract 2ab = 40 to leave a\u00B2 + b\u00B2 = 41. Choice C is (a+b)\u00B2 left unfinished; B adds 2ab instead of subtracting."},
+   {q:"If m \u2212 n = 4 and mn = 12, what is m\u00B2 + n\u00B2 ?",
+    o:["16","28","40","52"], a:2,
+    e:"(m\u2212n)\u00B2 = m\u00B2 \u2212 2mn + n\u00B2 = 16, so m\u00B2 + n\u00B2 = 16 + 2(12) = 40. Note the sign flips compared with the previous question \u2014 here you <i>add</i> 2mn back."},
+   {q:"If p\u00B2 + q\u00B2 = 58 and pq = 21, what is p + q ?",
+    o:["10","79","100","37"], a:0,
+    e:"(p+q)\u00B2 = p\u00B2 + 2pq + q\u00B2 = 58 + 42 = 100, so p + q = 10. <b>Choice C is the square left untaken</b> \u2014 the second step forgotten."},
+   {q:"Collect and factor completely: 4x\u00B2 + 6x \u2212 x\u00B2 + 3x",
+    o:["3x(x + 3)","3x(x + 9)","x(3x + 9)","3x\u00B2 + 9x"], a:0,
+    e:"Collect first: 3x\u00B2 + 9x. Then factor: 3x(x + 3). Choice D stops before factoring; C pulls out only x, not the 3 as well \u2014 both are one step short."},
+   {q:"If 5a + 3b = 26 and 5a \u2212 3b = 14, what is b ?",
+    o:["2","4","20","6"], a:0,
+    e:"Subtracting the second equation from the first eliminates a: 6b = 12, so b = 2. Adding them would give a instead. <b>Choose which operation kills the variable you don't want.</b>"},
+   {q:"If 2(x + 3) \u2212 3(x \u2212 1) = 10, what is x ?",
+    o:["\u22121","1","19","\u221219"], a:0,
+    e:"Distribute first: 2x + 6 \u2212 3x + 3 = \u2212x + 9. Then \u2212x + 9 = 10 gives x = \u22121. The minus in front of the 3 must reach both terms \u2014 missing it gives choice B."},
+   {q:"If x\u00B2 + 6x + 9 = 49, what is the value of x + 3 ?",
+    o:["7 or \u22127","7 only","4 or \u221210","46"], a:0,
+    e:"The left side is the perfect square (x + 3)\u00B2, so (x+3)\u00B2 = 49 and x + 3 = \u00B17. Recognising the perfect square skips the quadratic formula entirely. Choice C solves for x rather than for x + 3 \u2014 read what was asked."}
+  ]
+},
+{
+  id:"geo", title:"Shaded Area, Circles and Similar Figures", tag:"Geometry", target:900,
+  intro:"Geometry was your weakest Math Achievement subtype on the official test. Three ideas cover almost all of it. <b>Shaded area</b> is always one whole figure minus another \u2014 the work is finding the second figure's dimension from the first. <b>Arc and sector</b> are just a fraction of the circle: the angle over 360, times the circumference or the area. <b>Scaling:</b> if lengths are in ratio k, areas go as k\u00B2 and volumes as k\u00B3.",
+  questions:[
+   {q:"A circle is inscribed in a square of side s. Which expression gives the shaded area inside the square but outside the circle?",
+    svg:{fig:"circleInSquare", a:"s"},
+    o:["s\u00B2 \u2212 \u03C0s\u00B2/4","s\u00B2 \u2212 \u03C0s\u00B2","s\u00B2 \u2212 \u03C0s\u00B2/2","s\u00B2 \u2212 2\u03C0s\u00B2"], a:0,
+    e:"The circle's diameter equals the square's side, so r = s/2 and its area is \u03C0(s/2)\u00B2 = \u03C0s\u00B2/4. <b>The whole problem is the single step r = s/2</b> \u2014 choice B is what you get by using r = s."},
+   {q:"A square is inscribed in a circle of radius r. What is the area of the square?",
+    svg:{fig:"squareInCircle", a:"r"},
+    o:["2r\u00B2","4r\u00B2","r\u00B2\u221A2","\u03C0r\u00B2/2"], a:0,
+    e:"The square's diagonal is the circle's diameter, 2r. A square with diagonal d has area d\u00B2/2, so the area is 4r\u00B2/2 = 2r\u00B2. Choice B uses the diameter as the side length."},
+   {q:"Two concentric circles have radii 5 and 13. What is the exact area of the ring between them?",
+    svg:{fig:"ring", a:"5", b:"13"},
+    o:["144\u03C0","64\u03C0","8\u03C0","194\u03C0"], a:0,
+    e:"169\u03C0 \u2212 25\u03C0 = 144\u03C0. Subtract the areas, not the radii \u2014 choice C squares the difference of the radii instead."},
+   {q:"A circle has a radius of 12. What is the length of an arc with a central angle of 30\u00B0?",
+    svg:{fig:"sector", a:"12", deg:30, angleText:"30\u00B0"},
+    o:["2\u03C0","4\u03C0","12\u03C0","24\u03C0"], a:0,
+    e:"The fraction of the circle is 30/360 = 1/12. The circumference is 24\u03C0, so the arc is 24\u03C0/12 = 2\u03C0."},
+   {q:"A circle has a radius of 10. What is the area of a sector with a central angle of 72\u00B0?",
+    svg:{fig:"sector", a:"10", deg:72, angleText:"72\u00B0"},
+    o:["20\u03C0","4\u03C0","36\u03C0","72\u03C0"], a:0,
+    e:"72/360 = 1/5, and the circle's area is 100\u03C0, so the sector is 20\u03C0. <b>Same fraction, different quantity</b> \u2014 arc uses the circumference, sector uses the area. Choice B is the arc length instead."},
+   {q:"Two similar figures have areas of 16 and 81. What is the ratio of their perimeters?",
+    o:["4 : 9","16 : 81","2 : 3","256 : 6561"], a:0,
+    e:"Areas go as k\u00B2, so k\u00B2 = 16/81 and k = 4/9. Perimeters are lengths, so they are in ratio 4 : 9. <b>Run the rule backwards \u2014 take the square root of the area ratio.</b> Choice B forgets to."},
+   {q:"What is the distance between the points (\u22123, 2) and (5, 17)?",
+    o:["17","23","\u221A23","13"], a:0,
+    e:"The horizontal gap is 8 and the vertical gap is 15, so the distance is \u221A(64 + 225) = \u221A289 = 17. An 8-15-17 right triangle \u2014 worth recognising alongside 3-4-5 and 5-12-13. Choice B adds the gaps instead of using Pythagoras."},
+   {q:"Two parallel lines are cut by a transversal. One of the eight angles formed measures 68\u00B0. How many of the eight angles measure 112\u00B0?",
+    svg:{fig:"transversal", a:"68\u00B0"},
+    o:["4","2","1","6"], a:0,
+    e:"The eight angles come in just two sizes. Four of them equal 68\u00B0 and the other four are its supplement, 180 \u2212 68 = 112\u00B0."}
+  ]
+},
+{
+  id:"solids", title:"Solving Geometric Formulas", tag:"Measurement", target:900,
+  intro:"You spent <b>234 seconds</b> on a cone-volume problem against a 58-second average, and got it wrong. That is not a hard problem \u2014 it is a method problem. <b>Write the formula, substitute what you know, then isolate.</b> Do not rearrange the formula symbolically first; putting the numbers in immediately makes the algebra trivial and is where the time is saved.<br>V<sub>cone</sub> = (1/3)\u03C0r\u00B2h &nbsp;&nbsp; V<sub>cyl</sub> = \u03C0r\u00B2h &nbsp;&nbsp; V<sub>sphere</sub> = (4/3)\u03C0r\u00B3 &nbsp;&nbsp; SA<sub>sphere</sub> = 4\u03C0r\u00B2 &nbsp;&nbsp; SA<sub>cyl</sub> = 2\u03C0r\u00B2 + 2\u03C0rh",
+  questions:[
+   {q:"A cone has a volume of 48\u03C0 and a height of 9. What is its radius?",
+    svg:{solid:"cone", r:"?", h:"9"},
+    o:["4","16","12","5.3"], a:0,
+    e:"48\u03C0 = (1/3)\u03C0r\u00B2(9) = 3\u03C0r\u00B2. Divide both sides by 3\u03C0: r\u00B2 = 16, so r = 4. <b>Substituting first turns this into one division.</b> Choice B is r\u00B2 left unfinished; choice D is 48/9."},
+   {q:"A cone has a volume of 75\u03C0 and a radius of 5. What is its height?",
+    svg:{solid:"cone", r:"5", h:"?"},
+    o:["3","9","15","5"], a:1,
+    e:"75\u03C0 = (1/3)\u03C0(25)h, so 75 = 25h/3 and h = 9. Watch the 1/3 \u2014 forgetting it gives choice A."},
+   {q:"A cylinder has a volume of 128\u03C0 and a height of 8. What is its radius?",
+    svg:{solid:"cylinder", r:"?", h:"8"},
+    o:["4","16","8","5"], a:0,
+    e:"128\u03C0 = \u03C0r\u00B2(8), so r\u00B2 = 16 and r = 4. No 1/3 here \u2014 that is the only difference from a cone."},
+   {q:"A sphere has a volume of 36\u03C0. What is its radius?",
+    svg:{solid:"sphere", r:"?"},
+    o:["3","6","9","27"], a:0,
+    e:"36\u03C0 = (4/3)\u03C0r\u00B3, so r\u00B3 = 27 and r = 3. <b>Volume means a cube root, not a square root</b> \u2014 choice D is r\u00B3 left unfinished."},
+   {q:"A sphere has a surface area of 100\u03C0. What is its radius?",
+    svg:{solid:"sphere", r:"?"},
+    o:["5","10","25","2.5"], a:0,
+    e:"100\u03C0 = 4\u03C0r\u00B2, so r\u00B2 = 25 and r = 5. Surface area is an area, so this one is a square root \u2014 compare with the previous question."},
+   {q:"A cylinder has a radius of 3 and a total surface area of 48\u03C0, including both ends. What is its height?",
+    svg:{solid:"cylinder", r:"3", h:"?"},
+    o:["5","8","3","16"], a:0,
+    e:"48\u03C0 = 2\u03C0(9) + 2\u03C0(3)h = 18\u03C0 + 6\u03C0h. So 30\u03C0 = 6\u03C0h and h = 5. <b>The two ends are the part people forget</b> \u2014 leaving them out gives h = 8."},
+   {q:"A cone and a cylinder have the same radius and the same height. The cylinder's volume is 60\u03C0. What is the cone's volume?",
+    svg:{solid:"cone", r:"r", h:"h", caption:"same r and h as a cylinder of volume 60\u03C0"},
+    o:["20\u03C0","30\u03C0","180\u03C0","60\u03C0"], a:0,
+    e:"A cone is exactly one third of the cylinder with the same base and height, so 60\u03C0 \u00F7 3 = 20\u03C0. Worth knowing on sight \u2014 no formula needed."},
+   {q:"A rectangular prism has a volume of 240, a length of 8 and a width of 5. What is its height?",
+    svg:{solid:"prism", l:"8", w:"5", h:"?"},
+    o:["6","30","48","12"], a:0,
+    e:"240 = 8 \u00D7 5 \u00D7 h = 40h, so h = 6."},
+   {q:"A sphere's radius is doubled. Its volume is multiplied by",
+    svg:{solid:"sphere", r:"2r", caption:"radius doubled"},
+    o:["2","4","6","8"], a:3,
+    e:"Volume goes as r\u00B3, so doubling the radius multiplies the volume by 2\u00B3 = 8. <b>Its surface area, being an area, would go up by 2\u00B2 = 4.</b> Lengths scale by k, areas by k\u00B2, volumes by k\u00B3."},
+   {q:"A cylinder has a radius of 5 and a height of 12. What is its volume?",
+    svg:{solid:"cylinder", r:"5", h:"12"},
+    o:["300\u03C0","60\u03C0","100\u03C0","120\u03C0"], a:0,
+    e:"\u03C0r\u00B2h = \u03C0(25)(12) = 300\u03C0. Square the radius before multiplying by the height \u2014 choice B is 5 \u00D7 12 without squaring."}
   ]
 },
 {
   id:"cbd", title:"Comparisons: Test Before You Answer", tag:"Quantitative Reasoning", target:900,
-  intro:"You have missed five comparison questions across four tests, every one answered in <b>7 to 21 seconds</b> against averages two to four times longer. The pattern is picturing one case, seeing a clean relationship, and committing. <b>Test a second case first \u2014 try 1, a fraction, a negative, and a long thin shape.</b> If two cases disagree the answer is (D); but not all of these are (D), so actually check.",
+  intro:"You have missed comparison questions across four tests, every one answered in <b>7 to 21 seconds</b> against averages two to four times longer. The pattern is picturing one case, seeing a clean relationship, and committing. <b>Test a second case before answering \u2014 try 1, a fraction, a negative, and a long thin shape.</b> If two cases disagree the answer is (D); but not all of these are (D), so actually check.",
   questions:[
-   {q:"A rectangle has an area of 12 cm\u00B2.<br><b>Column A:</b> its perimeter<br><b>Column B:</b> 14 cm",
+   {q:"A rectangle has an area of 18 cm\u00B2.<br><b>Column A:</b> its perimeter<br><b>Column B:</b> 18 cm",
     o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
-    e:"A 3\u00D74 rectangle has perimeter 14 \u2014 equal. A 2\u00D76 has perimeter 16 \u2014 greater. Two cases disagree, so (D). <b>A fixed area does not fix the shape</b>; long thin rectangles have huge perimeters."},
-   {q:"A triangle has an area of 20 cm\u00B2.<br><b>Column A:</b> its perimeter<br><b>Column B:</b> 20 cm",
+    e:"A 3\u00D76 rectangle has perimeter 18 \u2014 equal. A 2\u00D79 has perimeter 22 \u2014 greater. Two cases disagree, so (D). <b>A fixed area does not fix the shape.</b>"},
+   {q:"x is a positive integer.<br><b>Column A:</b> 2x<br><b>Column B:</b> x\u00B2",
     o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
-    e:"Same idea. A triangle with base 400 and height 0.1 still has area 20 and an enormous perimeter. Area never pins down perimeter."},
-   {q:"x is a positive integer.<br><b>Column A:</b> x\u00B2<br><b>Column B:</b> x\u00B3",
-    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
-    e:"If x = 2 then 4 < 8 and B wins. But if x = 1 both are 1 \u2014 equal. <b>Always test x = 1 when a variable is a positive integer.</b> It breaks most of these."},
-   {q:"0 < x < 1.<br><b>Column A:</b> x\u00B2<br><b>Column B:</b> \u221Ax",
+    e:"x = 1 gives 2 > 1, so A. x = 2 gives 4 = 4, equal. x = 3 gives 6 < 9, so B. Three different outcomes \u2014 <b>always test x = 1 first.</b>"},
+   {q:"0 < y < 1.<br><b>Column A:</b> y\u00B3<br><b>Column B:</b> y",
     o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
-    e:"Between 0 and 1 the order reverses: x\u00B2 < x < \u221Ax. Try x = 1/4 \u2014 then x\u00B2 = 1/16 against \u221Ax = 1/2. This one <i>is</i> determined, so (D) would be wrong."},
-   {q:"n is a negative number.<br><b>Column A:</b> n\u00B2<br><b>Column B:</b> \u2212n",
-    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
-    e:"n = \u22122 gives 4 against 2, so A. But n = \u22120.5 gives 0.25 against 0.5, so B. \u201CNegative number\u201D includes fractions between \u22121 and 0 \u2014 the case people forget."},
-   {q:"The original price of a headset is $80.<br><b>Column A:</b> the price after a 20% reduction<br><b>Column B:</b> the price after a 10% reduction, then another 10% off the reduced price",
+    e:"Between 0 and 1, raising to a power makes a number smaller: y\u00B3 < y\u00B2 < y. Try y = 1/2 \u2014 then y\u00B3 = 1/8. This one is determined, so (D) would be wrong."},
+   {q:"A jacket originally costs $60.<br><b>Column A:</b> the price after 25% off<br><b>Column B:</b> the price after 10% off, then 15% off the reduced price",
     o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
-    e:"A: 80 \u00D7 0.80 = $64. B: 80 \u00D7 0.90 \u00D7 0.90 = $64.80. <b>Successive percentages never simply add</b> \u2014 the second 10% comes off a smaller number, so two 10% cuts remove less than one 20% cut. Fully determined, not (D)."},
-   {q:"<b>Column A:</b> the perimeter of a square with area 36<br><b>Column B:</b> the circumference of a circle with radius 4",
-    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
-    e:"The square has side 6 and perimeter 24. The circle has circumference 8\u03C0 \u2248 25.1. Both shapes are pinned down by what you were given, so it is determined \u2014 and you need \u03C0 \u2248 3.14, not 3."},
-   {q:"<b>Column A:</b> 20% of 80<br><b>Column B:</b> 80% of 20",
+    e:"A: 60 \u00D7 0.75 = $45. B: 60 \u00D7 0.90 \u00D7 0.85 = $45.90. <b>Successive percentages never simply add</b> \u2014 the second cut comes off a smaller number, so it removes less. Fully determined."},
+   {q:"<b>Column A:</b> 30% of 50<br><b>Column B:</b> 50% of 30",
     o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:2,
-    e:"Both equal 16. In general a% of b always equals b% of a, since both are ab/100. Worth recognising on sight."}
+    e:"Both equal 15. In general a% of b always equals b% of a, since both are ab/100."},
+   {q:"n is a negative number.<br><b>Column A:</b> n\u00B3<br><b>Column B:</b> n\u00B2",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
+    e:"An odd power of a negative number stays negative; an even power turns positive. So n\u00B3 < 0 < n\u00B2 for every negative n. Determined \u2014 no need for (D) here."},
+   {q:"<b>Column A:</b> the area of a circle with radius 5<br><b>Column B:</b> the area of a square with side 9",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:1,
+    e:"25\u03C0 \u2248 78.5 against 81. Close enough that you need \u03C0 \u2248 3.14 \u2014 using 3 would give 75 and still land on B, but the margin is thin enough to be worth the accuracy."},
+   {q:"A rectangle has a perimeter of 20 cm.<br><b>Column A:</b> its area<br><b>Column B:</b> 24 cm\u00B2",
+    o:["Column A is greater","Column B is greater","The two are equal","Cannot be determined"], a:3,
+    e:"A 6\u00D74 rectangle has area 24 \u2014 equal. A 5\u00D75 has area 25 \u2014 greater. A 8\u00D72 has area 16 \u2014 smaller. <b>A fixed perimeter does not fix the area</b>, just as a fixed area does not fix the perimeter."}
   ]
 },
 {
   id:"trig", title:"Trigonometry in Expression Form", tag:"Geometry", target:600,
-  intro:"Kept as maintenance \u2014 missed on two separate tests months apart. Two decisions, no arithmetic. <b>Which function?</b> Name the two sides involved: opposite &amp; hypotenuse means sine, adjacent &amp; hypotenuse means cosine, both legs means tangent. <b>Multiply or divide?</b> Divide only when the side you <i>want</i> is the hypotenuse. The unknown side is drawn in brown.",
+  intro:"Missed on two separate tests months apart. Two decisions, no arithmetic. <b>Which function?</b> Name the two sides involved: opposite &amp; hypotenuse means sine, adjacent &amp; hypotenuse means cosine, both legs means tangent. <b>Multiply or divide?</b> Divide only when the side you <i>want</i> is the hypotenuse. The unknown side is drawn in brown.",
   questions:[
-   {q:"In \u25B3DEF the right angle is at F. Side DF = 24 and angle DEF = 58\u00B0. Which expression equals DE?",
-    svg:{bl:"F",tl:"D",br:"E",angleAt:"br",angleText:"58\u00B0",vertical:"24",horizontal:"",hyp:"?"},
-    o:["24 sin 58\u00B0","24 cos 58\u00B0","24 / sin 58\u00B0","24 / cos 58\u00B0"], a:2,
-    e:"DE is the hypotenuse, so we divide. From angle E, side DF is opposite. Opposite + hypotenuse means sine."},
-   {q:"Same triangle. Which expression equals EF?",
-    svg:{bl:"F",tl:"D",br:"E",angleAt:"br",angleText:"58\u00B0",vertical:"24",horizontal:"?",hyp:""},
-    o:["24 tan 58\u00B0","24 / tan 58\u00B0","24 cos 58\u00B0","24 / cos 58\u00B0"], a:1,
-    e:"EF is adjacent to E and DF is opposite E \u2014 two legs, so tangent. We want the adjacent leg, so divide."},
-   {q:"In \u25B3JKL the right angle is at L. Side JK = 26 and angle KJL = 37\u00B0. Which expression equals JL?",
-    svg:{bl:"L",tl:"K",br:"J",angleAt:"br",angleText:"37\u00B0",vertical:"",horizontal:"?",hyp:"26"},
-    o:["26 sin 37\u00B0","26 cos 37\u00B0","26 / sin 37\u00B0","26 / cos 37\u00B0"], a:1,
-    e:"JK is the hypotenuse and is known; JL is adjacent to angle J. Adjacent + hypotenuse means cosine, and we want a leg, so multiply."},
-   {q:"From a lighthouse 90 feet high, the angle of depression to a boat is 31\u00B0. Which expression gives the horizontal distance to the boat?",
-    svg:{angleAt:"br",angleText:"31\u00B0",vertical:"90 ft",horizontal:"?",hyp:"",caption:"the angle at the boat equals the angle of depression"},
-    o:["90 tan 31\u00B0","90 / tan 31\u00B0","90 sin 31\u00B0","90 / sin 31\u00B0"], a:1,
-    e:"No hypotenuse is involved \u2014 a height and a horizontal distance only \u2014 so tangent. The height is opposite and the distance adjacent, so divide."},
-   {q:"A kite string 55 feet long makes a 62\u00B0 angle with the ground. Which expression gives the kite's height?",
-    svg:{angleAt:"br",angleText:"62\u00B0",vertical:"?",horizontal:"",hyp:"55 ft",caption:"string, height and ground"},
-    o:["55 sin 62\u00B0","55 / sin 62\u00B0","55 cos 62\u00B0","55 tan 62\u00B0"], a:0,
-    e:"The string is the hypotenuse and is known; the height is opposite. Sine, and we want a leg, so multiply."}
+   {q:"In \u25B3RST the right angle is at T. Side RT = 18 and angle RST = 41\u00B0. Which expression equals RS?",
+    svg:{bl:"T",tl:"R",br:"S",angleAt:"br",angleText:"41\u00B0",vertical:"18",horizontal:"",hyp:"?"},
+    o:["18 sin 41\u00B0","18 cos 41\u00B0","18 / sin 41\u00B0","18 / cos 41\u00B0"], a:2,
+    e:"RS is the hypotenuse, so we divide. From angle S, side RT is opposite. Opposite + hypotenuse means sine."},
+   {q:"In \u25B3GHK the right angle is at H. Side GK = 32 and angle KGH = 54\u00B0. Which expression equals GH?",
+    svg:{bl:"H",tl:"K",br:"G",angleAt:"br",angleText:"54\u00B0",vertical:"",horizontal:"?",hyp:"32"},
+    o:["32 sin 54\u00B0","32 cos 54\u00B0","32 / sin 54\u00B0","32 / cos 54\u00B0"], a:1,
+    e:"GK is the hypotenuse and is known; GH is adjacent to angle G. Adjacent + hypotenuse means cosine, and we want a leg, so multiply."},
+   {q:"A flagpole casts a shadow 24 feet long when the sun's angle of elevation is 47\u00B0. Which expression gives the height of the flagpole?",
+    svg:{angleAt:"br",angleText:"47\u00B0",vertical:"?",horizontal:"24 ft",hyp:"",caption:"height against shadow length"},
+    o:["24 tan 47\u00B0","24 / tan 47\u00B0","24 sin 47\u00B0","24 / cos 47\u00B0"], a:0,
+    e:"A shadow and a height with no rope or wire means no hypotenuse is involved \u2014 so tangent. The shadow is adjacent, the height opposite, and we want the opposite leg, so multiply."},
+   {q:"In \u25B3WXY the right angle is at X. Side WX = 12 and angle XWY = 36\u00B0. Which expression equals WY?",
+    svg:{bl:"X",tl:"Y",br:"W",angleAt:"br",angleText:"36\u00B0",vertical:"",horizontal:"12",hyp:"?"},
+    o:["12 sin 36\u00B0","12 cos 36\u00B0","12 / sin 36\u00B0","12 / cos 36\u00B0"], a:3,
+    e:"WY is the hypotenuse, so we divide. WX is adjacent to angle W, so cosine. Adjacent known, hypotenuse wanted: 12 / cos 36\u00B0."},
+   {q:"A ramp 30 feet long rises at an angle of 14\u00B0 to the ground. Which expression gives the height of its top end?",
+    svg:{angleAt:"br",angleText:"14\u00B0",vertical:"?",horizontal:"",hyp:"30 ft",caption:"ramp, height and ground"},
+    o:["30 sin 14\u00B0","30 / sin 14\u00B0","30 cos 14\u00B0","30 tan 14\u00B0"], a:0,
+    e:"The ramp is the hypotenuse and is known; the height is opposite the angle. Sine, and we want a leg, so multiply."}
   ]
 }
 ];
+
+
+/* ======================= BONUS SPLIT ======================= */
+/* A full math session ran to 55 questions, too long for one sitting. Every
+   third question moves out of its set into one pooled Bonus set, leaving the
+   sets themselves shorter.
+
+   The picks are evenly spaced rather than sliced off the tail, because
+   several sets change sub-topic half way through -- Scientific Notation runs
+   notation first and rate conversions second -- and a tail slice would strip
+   a whole sub-topic out of the main session.
+
+   Trigonometry is left intact: PROJECT.md flags it as the one genuine
+   weakness rather than a maintenance topic, and it is only five questions. */
+const BONUS_WHOLE = ['trig'];
+
+function bonusPicks(n){
+  const k = Math.round(n / 3);
+  const idx = [];
+  for(let j = 1; j <= k; j++) idx.push(Math.floor(j * n / (k + 1)));
+  return idx;
+}
+
+const BONUSQ = [];
+MATHSETS.forEach(m => {
+  if(BONUS_WHOLE.indexOf(m.id) !== -1) return;
+  const picks = bonusPicks(m.questions.length), keep = [];
+  m.questions.forEach((q, i) => {
+    /* tag carries the origin topic so the review sheet still says what a
+       bonus question was actually testing */
+    if(picks.indexOf(i) !== -1) BONUSQ.push(Object.assign({}, q, {tag: m.tag}));
+    else keep.push(q);
+  });
+  m.questions = keep;
+});
+
+const BONUSSET = {
+  id: 'bonus',
+  title: 'Bonus Questions',
+  tag: 'Mixed',
+  target: 900,
+  intro: 'One question in three, pulled from every math set above. Nothing here tells you which topic you are in &mdash; which is the point, and closer to how the real test presents them. Sit these after the sets, not instead of them.',
+  questions: BONUSQ
+};
+
+/* Full sessions queue MATHSETS only, so bonus stays opt-in. */
+const ALLSETS = MATHSETS.concat([BONUSSET]);
 
 /* ==================== LaTeX EXPORT (all client-side) ==================== */
 /* Builds a .tex file from the miss log and downloads it. Compiles with plain
@@ -823,11 +1079,15 @@ function home(){
   stopTimer();
   const scores = load('scores',{});
   const nMiss = load('misslog',[]).length;
+  // Counted, not hard-coded: a full session queues every set, so a fixed
+  // number here goes stale the moment a set is added.
+  const mathQ = MATHSETS.reduce((n,m)=>n+m.questions.length, 0);
+  const readQ = PASSAGES.reduce((n,p)=>n+p.questions.length, 0);
   let h = `<h2>Run a full session</h2>
     <div class="card">
       <p class="meta" style="margin:0 0 10px">No answers shown until the end. Every question missed goes onto a review sheet you can print.</p>
-      <button class="primary" onclick="startFullTest('math')">Math only &mdash; 29 questions</button>
-      <button onclick="startFullTest('all')" style="margin-left:8px">Everything &mdash; 4 passages + 29 questions</button>
+      <button class="primary" onclick="startFullTest('math')">Math only &mdash; ${mathQ} questions</button>
+      <button onclick="startFullTest('all')" style="margin-left:8px">Everything &mdash; ${PASSAGES.length} passages + ${readQ + mathQ} questions</button>
     </div>
     <div class="card">
       <h3 style="margin:0 0 4px">Review sheet</h3>
@@ -851,6 +1111,12 @@ function home(){
       <p class="meta" style="margin:8px 0">${ms? 'Last score: <b>'+ms.c+' / '+ms.t+'</b>' : '&nbsp;'}</p>
       <button class="primary" onclick="go('math','${m.id}')">${ms?'Try again':'Start'}</button></div>`;
   });
+  const bs = scores[BONUSSET.id];
+  h += `<h2>Bonus</h2>
+    <div class="card"><h3>${BONUSSET.title}</h3>
+      <div class="meta"><span class="tag">${BONUSSET.tag}</span>${BONUSSET.questions.length} questions &middot; drawn from the sets above</div>
+      <p class="meta" style="margin:8px 0">${bs? 'Last score: <b>'+bs.c+' / '+bs.t+'</b>' : '&nbsp;'}</p>
+      <button class="primary" onclick="go('math','${BONUSSET.id}')">${bs?'Try again':'Start'}</button></div>`;
   h += `<p class="note" style="margin-top:26px">Read the explanation on every one you miss, not just the score.</p>`;
   app.innerHTML = h;
 }
@@ -961,13 +1227,13 @@ window.grade = function(id){
 };
 
 function mathView(id){
-  const m = MATHSETS.find(x=>x.id===id);
+  const m = ALLSETS.find(x=>x.id===id);
   window.__MSET = m;
   let h = `<div class="bar"><button onclick="go('home')">&larr; Back</button><span class="timer" id="timer">0:00</span></div>
     <h2>${m.title}</h2><div class="exp">${fracHTML(m.intro)}</div><div class="card">`;
   m.questions.forEach((q,i)=>{
     h += `<div class="q"><div class="qtext">${i+1}. ${fracHTML(q.q)}</div>`;
-    if(q.svg) h += triSVG(q.svg);
+    if(q.svg) h += (q.svg.fig ? figSVG(q.svg) : q.svg.solid ? solidSVG(q.svg) : triSVG(q.svg));
     q.o.forEach((o,j)=>{ h += `<label class="opt" id="mo${i}_${j}"><input type="radio" name="m${i}" value="${j}">${fracHTML(o)}</label>`; });
     h += `<div class="exp hide" id="me${i}"></div></div>`;
   });
@@ -1003,7 +1269,7 @@ window.gradeMath = function(){
       chosen: pick===-1 ? 'left blank' : q.o[pick],
       correct: q.o[q.a],
       explanation: q.e,
-      type: M.tag,
+      type: q.tag || M.tag,
       shape: '',
       setScore: c + ' / ' + M.questions.length,
       setTime: elapsed,
